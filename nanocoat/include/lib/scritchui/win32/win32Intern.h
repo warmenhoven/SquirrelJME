@@ -16,6 +16,8 @@
 #ifndef SJME_C_WIN32INTERN_H
 #define SJME_C_WIN32INTERN_H
 
+#include "sjme/config.h"
+
 /* Anti-C++. */
 #ifdef __cplusplus
 	#ifndef SJME_CXX_IS_EXTERNED
@@ -41,11 +43,11 @@ typedef sjme_errorCode (*sjme_scritchui_win32_intern_getLastErrorFunc)(
 	sjme_attrInValue sjme_errorCode ifOkay);
 
 /**
- * Recovers the component that belongs to a @c HWND .
+ * Recovers the component that belongs to a @a HWND .
  * 
  * @param inState The input state.
  * @param hWnd The window to get the component from, if this is
- * the value @c NULL then @c outComponent will be set to @c NULL .
+ * the value @c NULL then @a outComponent will be set to @c NULL .
  * @param outComponent The resultant component.
  * @return Any resultant error, if any.
  * @since 2024/08/06
@@ -80,7 +82,7 @@ struct sjme_scritchui_implInternFunctions
 	/** Translates the last error code to SquirrelJME errors. */
 	sjme_scritchui_win32_intern_getLastErrorFunc getLastError;
 	
-	/** Recovers the component that belongs to a @c HWND . */
+	/** Recovers the component that belongs to a @a HWND . */
 	sjme_scritchui_win32_intern_recoverComponentFunc recoverComponent;
 	
 	/** Window process handling. */

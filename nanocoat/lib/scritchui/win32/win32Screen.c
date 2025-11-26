@@ -12,7 +12,7 @@
 #include "lib/scritchui/win32/win32Intern.h"
 
 /**
- * Passed to @c sjme_scritchui_win32_displayQuery to fill in screen
+ * Passed to @link sjme_scritchui_win32_displayQuery @endlink to fill in screen
  * information.
  * 
  * @sincer 2024/08/05
@@ -55,7 +55,7 @@ static BOOL CALLBACK sjme_scritchui_win32_displayQuery(
 	/* Get information on this monitor. */
 	memset(&monitor, 0, sizeof(monitor));
 	monitor.cbSize = sizeof(monitor);
-	if (0 == GetMonitorInfo(hMonitor, &monitor))
+	if (0 == GetMonitorInfo(hMonitor, (LPMONITORINFO)&monitor))
 	{
 		info->error = info->inState->implIntern->getLastError(
 			info->inState, SJME_ERROR_NATIVE_WIDGET_FAILURE);

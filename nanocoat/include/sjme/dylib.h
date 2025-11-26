@@ -10,6 +10,7 @@
 /**
  * Dynamic Library loading.
  * 
+ * @file
  * @since 2024/03/27
  */
 
@@ -31,7 +32,8 @@ extern "C" {
 
 /*--------------------------------------------------------------------------*/
 
-#if defined(SJME_CONFIG_HAS_OS_WINDOWS)
+#if defined(SJME_CONFIG_HAS_OS_WINDOWS) && \
+	!defined(SJME_CONFIG_HAS_OS_WINDOWS_WINE)
 	/** Symbol is exported through a library. */
 	#define sjme_attrExport __declspec(dllexport)
 #elif defined(SJME_CONFIG_HAS_GCC) || \
