@@ -21,6 +21,8 @@
 #define SJME_C_CONFIG_H
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <setjmp.h>
 
 /* Floating point header, determines if software floats should be used. */
 #if !defined(SJME_CONFIG_HAS_NO_FLOAT_H)
@@ -170,10 +172,6 @@ extern "C" {
 #elif defined(__EMSCRIPTEN__) || defined(EMSCRIPTEN)
 	/** Emscripten (WASM). */
 	#define SJME_CONFIG_HAS_OS_EMSCRIPTEN
-#elif defined(SJME_CONFIG_IDENT_OS_GAMECUBE) || \
-	(defined(GEKKO) && defined(HW_DOL))
-	/** Nintendo GameCube is available. */
-	#define SJME_CONFIG_HAS_OS_NINTENDO_GAMECUBE
 #elif defined(SJME_CONFIG_IDENT_OS_WIIU) || \
 	(defined(GEKKO) && defined(HW_RVL) && defined(WIIU))
 	/** Nintendo Wii U is available. */
@@ -182,9 +180,16 @@ extern "C" {
 	(defined(GEKKO) && defined(HW_RVL) && !defined(WIIU))
 	/** Nintendo Wii is available. */
 	#define SJME_CONFIG_HAS_OS_NINTENDO_WII
+#elif defined(SJME_CONFIG_IDENT_OS_GAMECUBE) || \
+	(defined(GEKKO) && defined(HW_DOL))
+	/** Nintendo GameCube is available. */
+	#define SJME_CONFIG_HAS_OS_NINTENDO_GAMECUBE
 #elif defined(__3DS__) || defined(_3DS) || defined(SJME_CONFIG_IDENT_OS_3DS)
 	/** Nintendo 3DS is available. */
 	#define SJME_CONFIG_HAS_OS_NINTENDO_3DS
+#elif defined(PSP) || defined(SJME_CONFIG_IDENT_OS_PSP)
+	/** Sony PSP. */
+	#define SJME_CONFIG_HAS_OS_SONY_PSP
 #elif defined(PS2) || defined(_EE) || defined(_IOP) || defined(__PS2__) || \
 	defined(SJME_CONFIG_IDENT_OS_PLAYSTATION2)
 	/** Sony PlayStation 2. */

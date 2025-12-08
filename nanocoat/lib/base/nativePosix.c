@@ -10,7 +10,8 @@
 #include "sjme/util.h"
 #include "sjme/intern/nal.h"
 
-#if (SJME_CONFIG_NAL_NANOTIME == SJME_CONFIG_NAL_IMPLEMENT_POSIX)
+#if (SJME_CONFIG_NAL_NANOTIME == SJME_CONFIG_NAL_IMPLEMENT_POSIX) || \
+	(SJME_CONFIG_NAL_THREAD_SLEEP == SJME_CONFIG_NAL_IMPLEMENT_POSIX)
 	#include <time.h>
 #endif
 
@@ -383,7 +384,13 @@ sjme_errorCode sjme_nal_default_tcpUdp(
 	/* Determine bind/connect address hints, if any */
 	posixHints.ai_family = AF_UNSPEC;
 	posixHints.ai_socktype = (isUdp ? SOCK_DGRAM : SOCK_STREAM);
+#if defined(AI_ALL) && defined(AI_PASSIVE)
 	posixHints.ai_flags = (listening && address == NULL ? AI_PASSIVE : AI_ALL);
+#elif defined(AI_ALL)
+	posixHints.ai_flags = (listening && address == NULL ? 0 : AI_ALL);
+#elif defined(AI_PASSIVE)
+	posixHints.ai_flags = (listening && address == NULL ? AI_PASSIVE : 0);
+#endif
 
 	/* Convert port to string. */
 	memset(portBuf, 0, sizeof(portBuf));

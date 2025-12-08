@@ -35,22 +35,22 @@ extern "C"
 /*--------------------------------------------------------------------------*/
 
 /** Not implemented. */
-#define SJME_CONFIG_NAL_IMPLEMENT_NONE 0
+#define SJME_CONFIG_NAL_IMPLEMENT_NONE 1
 
 /** Use NAL Standard C implementation. */
-#define SJME_CONFIG_NAL_IMPLEMENT_STDC 1
+#define SJME_CONFIG_NAL_IMPLEMENT_STDC 2
 
 /** Use NAL POSIX implementation. */
-#define SJME_CONFIG_NAL_IMPLEMENT_POSIX 2
+#define SJME_CONFIG_NAL_IMPLEMENT_POSIX 3
 
 /** Use Windows 32-bit implementation. */
-#define SJME_CONFIG_NAL_IMPLEMENT_WIN32 3
+#define SJME_CONFIG_NAL_IMPLEMENT_WIN32 4
 
 /** Use Linux implementation. */
-#define SJME_CONFIG_NAL_IMPLEMENT_LINUX 4
+#define SJME_CONFIG_NAL_IMPLEMENT_LINUX 5
 
 /** Use Older POSIX implementation. */
-#define SJME_CONFIG_NAL_IMPLEMENT_POSIX_OLD 5
+#define SJME_CONFIG_NAL_IMPLEMENT_POSIX_OLD 6
 
 #if !defined(SJME_CONFIG_NAL_GETENV)
 	#if defined(SJME_CONFIG_HAS_C89)
@@ -92,7 +92,10 @@ extern "C"
 	#define SJME_CONFIG_NAL_TCP_UDP SJME_CONFIG_NAL_IMPLEMENT_WIN32
 #elif !defined(SJME_CONFIG_HAS_NO_SYS_SOCKET_H) && \
 	defined(SJME_CONFIG_HAS_SYS_SOCKET_H)
-	#if SJME_CONFIG_POSIX_VERSION_LEAST(SJME_CONFIG_POSIX_VERSION_2001)
+	#if defined(SJME_CONFIG_HAS_OS_SONY_PSP)
+		/** Use Old POSIX networking. */
+		#define SJME_CONFIG_NAL_TCP_UDP SJME_CONFIG_NAL_IMPLEMENT_POSIX_OLD
+	#elif SJME_CONFIG_POSIX_VERSION_LEAST(SJME_CONFIG_POSIX_VERSION_2001)
 		/** Use POSIX 2001 networking. */
 		#define SJME_CONFIG_NAL_TCP_UDP SJME_CONFIG_NAL_IMPLEMENT_POSIX
 	#else
@@ -102,7 +105,10 @@ extern "C"
 #endif
 
 #if !defined(SJME_CONFIG_NAL_THREAD_SLEEP)
-	#if defined(SJME_CONFIG_HAS_OS_POSIX)
+	#if defined(SJME_CONFIG_HAS_OS_NINTENDO_WIIU)
+		/** Use fallback none implementation of thread sleep. */
+		#define SJME_CONFIG_NAL_THREAD_SLEEP SJME_CONFIG_NAL_IMPLEMENT_NONE
+	#elif defined(SJME_CONFIG_HAS_OS_POSIX)
 		/** Use POSIX implementation of thread sleep. */
 		#define SJME_CONFIG_NAL_THREAD_SLEEP SJME_CONFIG_NAL_IMPLEMENT_POSIX
 	#elif defined(SJME_CONFIG_HAS_OS_WINDOWS)

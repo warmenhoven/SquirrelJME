@@ -6,10 +6,6 @@
 // SquirrelJME is under the Mozilla Public License Version 2.0.
 // See license.mkd for licensing and copyright information.
 // -------------------------------------------------------------------------*/
-
-#include <stdio.h>
-#include <string.h>
-
 #include "sjme/nvm/allocSizeOf.h"
 #include "sjme/nvm/boot.h"
 #include "sjme/debug.h"
@@ -627,7 +623,7 @@ sjme_errorCode sjme_nvm_defaultDir(
 			return sjme_error_default(error);
 		
 		/* Get home variable instead, to add onto. */
-		memset(work, 0, sizeof(work));
+		memset(work, 0, limit);
 		if (sjme_error_is(error = nal->getEnv(
 			work, limit - 1, "HOME")))
 			return sjme_error_default(error);
