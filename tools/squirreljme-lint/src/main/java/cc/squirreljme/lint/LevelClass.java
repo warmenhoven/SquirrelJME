@@ -1,29 +1,26 @@
 // -*- Mode: Java; indent-tabs-mode: t; tab-width: 4 -*-
 // ---------------------------------------------------------------------------
-// SquirrelJME
+// Multi-Phasic Applications: SquirrelJME
 //     Copyright (C) Stephanie Gawroriski <xer@multiphasicapps.net>
 // ---------------------------------------------------------------------------
 // SquirrelJME is under the Mozilla Public License Version 2.0.
 // See license.mkd for licensing and copyright information.
 // ---------------------------------------------------------------------------
 
-package squirreljme.compilerbug;
+package cc.squirreljme.lint;
 
-import net.multiphasicapps.tac.TestRunnable;
+import cc.squirreljme.runtime.cldc.debug.Debugging;
+import java.io.InputStream;
 
 /**
- * This exists to store fields for the linked list iterator compiler bug test
- * but Jasmin is being stupidly impossible with fields.
+ * A class.
  *
- * @since 2021/06/16
+ * @since 2025/12/31
  */
-@SuppressWarnings("unused")
-abstract class __LLIAFields__
-	extends TestRunnable
+public class LevelClass
 {
-	int _vdx;
-	int _atmod;
-	FakeLinkedList list;
-	__Link__ _next;
-	__Link__ _last;
+	public LevelClass(InputStream __in)
+	{
+		throw Debugging.todo();
+	}
 }
