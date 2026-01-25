@@ -53,12 +53,13 @@ squirreljme_include_nanocoat("multilib.cmake")
 
 # Import the JVM library that NanoCoat found
 # We also need to build the SquirrelJME base library
-include("${SQUIRRELJME_NANOCOAT_BINARY_DIR}/discoveredJvm.cmake")
 include("${SQUIRRELJME_NANOCOAT_BINARY_DIR}/BaseStatic.cmake")
+include("${SQUIRRELJME_NANOCOAT_BINARY_DIR}/libJvmDyLib.cmake")
+include("${SQUIRRELJME_NANOCOAT_BINARY_DIR}/discoveredJvm.cmake")
 
 execute_process(COMMAND "${CMAKE_COMMAND}"
 	"--build" "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
-	"--target" "BaseStatic"
+	"--target" "BaseStatic" "libJvmDyLib"
 	RESULT_VARIABLE baseStaticBuild)
 if(NOT baseStaticBuild EQUAL "0")
 	message(FATAL_ERROR "Could not build SquirrelJME base library!")
@@ -105,6 +106,7 @@ target_link_directories(libEmulatorBase PRIVATE
 target_link_libraries(libEmulatorBase PUBLIC
 	"$<TARGET_PROPERTY:BaseStatic,IMPORTED_LOCATION>"
 	"$<TARGET_PROPERTY:BaseStatic,IMPORTED_LOCATION_$<UPPER_CASE:$<CONFIG>>>"
+	"$<TARGET_PROPERTY:BaseStatic,IMPORTED_LOCATION_NOCONFIG>"
 	"$<TARGET_PROPERTY:discoveredJvm,INTERFACE_LINK_LIBRARIES>")
 
 # It is easier to find this when it is in the build root

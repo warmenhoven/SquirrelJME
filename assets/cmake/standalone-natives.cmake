@@ -54,10 +54,10 @@ foreach(compilerMap IN LISTS SQUIRRELJME_COMPILER_MAP)
 		"${systemNormal}/${archNormal}...")
 
 	# Which arguments to use?
-	unset(va)
-	unset(vb)
-	unset(vc)
-	unset(vd)
+	set(va "-DXXSJMEVAXX=1")
+	set(vb "-DXXSJMEVBXX=1")
+	set(vc "-DXXSJMEVCXX=1")
+	set(vd "-DXXSJMEVDXX=1")
 	squirreljme_compiler_cmake_args(va vb vc vd
 		"${systemNormal}" "${archNormal}")
 
@@ -144,9 +144,6 @@ foreach(compilerMap IN LISTS SQUIRRELJME_COMPILER_MAP)
 		list(APPEND SQUIRRELJME_STANDALONE_NATIVE_RULES
 			"${ruleName}")
 
-		# Register to CI/CD
-		squirreljme_cicd_register(${ruleName})
-
 		# Set the emulator native path
 		set_target_properties(${ruleName}
 			PROPERTIES
@@ -156,6 +153,9 @@ foreach(compilerMap IN LISTS SQUIRRELJME_COMPILER_MAP)
 			SQUIRRELJME_ARCH "${archNormal}"
 			ADDITIONAL_CLEAN_FILES
 				"${coreBuild};${coreOut};${emulatorBuild};${emulatorOut}")
+
+			# Register to CI/CD
+			squirreljme_cicd_register(${ruleName})
 	else()
 		# Progress indication
 		message(STATUS "Failed to configure "
@@ -174,4 +174,64 @@ foreach(compilerMap IN LISTS SQUIRRELJME_COMPILER_MAP)
 			message(WARNING ${emuErr})
 		endif()
 	endif()
+endforeach()
+
+# Go through all natives and package them individually
+foreach(rule IN LISTS SQUIRRELJME_STANDALONE_NATIVE_RULES)
+	# Where were the binaries and list files placed?
+	get_target_property(coreNativePath ${rule}
+		SQUIRRELJME_CORE_NATIVE_PATH)
+	get_target_property(emulatorNativePath ${rule}
+		SQUIRRELJME_EMULATOR_NATIVE_PATH)
+
+	# Which system/arch does this target?
+	get_target_property(systemNormal ${rule}
+		SQUIRRELJME_SYSTEM)
+	get_target_property(archNormal ${rule}
+		SQUIRRELJME_ARCH)
+
+	# Remember which actual natives were put in
+	list(APPEND SQUIRRELJME_STANDALONE_NATIVES_AVAILABLE
+		"${systemNormal}!${archNormal}")
+
+	# The target name
+	set(targetName "natives.${systemNormal}.${archNormal}")
+
+	# Temporary
+	set(workPath
+		"${CMAKE_BINARY_DIR}/work-pack/${systemNormal}-${archNormal}")
+	set(outputDir
+		"${CMAKE_BINARY_DIR}")
+	set(outputZip
+		"${outputDir}/natives-${systemNormal}-${archNormal}.zip")
+
+	# Add the natives to their own individual archive
+	file(MAKE_DIRECTORY "${outputDir}" "${workPath}")
+	add_custom_target(${targetName}
+		COMMAND "${CMAKE_COMMAND}" "-E"
+			"make_directory"
+			"${workPath}/natives/${systemNormal}/${archNormal}"
+		COMMAND "${CMAKE_COMMAND}" "-E"
+			"copy_directory"
+			"${coreNativePath}/" "${emulatorNativePath}/"
+			"${workPath}/natives/${systemNormal}/${archNormal}"
+		COMMAND "${CMAKE_COMMAND}" "-E"
+			"make_directory" "${outputDir}"
+		COMMAND "${CMAKE_COMMAND}" "-E"
+			"tar" "c" "${outputZip}" "--format=zip" "--" "."
+		BYPRODUCTS "${outputZip}"
+		WORKING_DIRECTORY "${workPath}"
+		DEPENDS ${rule}
+		COMMENT "Packaging ${systemNormal}/${archNormal}...")
+
+	# Output type and location
+	set_target_properties(${targetName} PROPERTIES
+		SQUIRRELJME_OUTPUT_PATH "${outputZip}"
+		SQUIRRELJME_OUTPUT_TYPE "natives")
+
+	# These get uploaded into Fossil
+	squirreljme_fossil_upload_register(${targetName})
+
+	# Register to CI/CD
+	squirreljme_cicd_register(${targetName})
 endforeach()

@@ -96,9 +96,9 @@ if(SQUIRRELJME_HAS_STANDALONE_JAR_BASE)
 		get_target_property(archNormal ${rule}
 			SQUIRRELJME_ARCH)
 
-		# Remember which actual natives were put in
-		list(APPEND SQUIRRELJME_STANDALONE_NATIVES_AVAILABLE
-			"${systemNormal}!${archNormal}")
+#		# Remember which actual natives were put in
+#		list(APPEND SQUIRRELJME_STANDALONE_NATIVES_AVAILABLE
+#			"${systemNormal}!${archNormal}")
 
 		# Add the natives to the Standalone Jar
 		add_custom_command(TARGET standaloneJar
@@ -125,8 +125,7 @@ if(SQUIRRELJME_HAS_STANDALONE_JAR_BASE)
 		COMMENT "Finalizing ${outputJar}...")
 
 	# These get uploaded into Fossil
-	list(APPEND SQUIRRELJME_UPLOAD_TARGETS
-		standaloneJar)
+	squirreljme_fossil_upload_register(standaloneJar)
 
 	# Register to CI/CD
 	squirreljme_cicd_register(standaloneJar)
