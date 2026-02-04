@@ -8,7 +8,7 @@
 # DESCRIPTION: Fossil site inner script
 
 # Upload to fossil
-macro(squirreljme_fossil_upload target)
+function(squirreljme_fossil_upload target)
 	# Get the output path and type for the target
 	get_target_property(outputPath ${target} SQUIRRELJME_OUTPUT_PATH)
 	get_target_property(outputType ${target} SQUIRRELJME_OUTPUT_TYPE)
@@ -24,9 +24,6 @@ macro(squirreljme_fossil_upload target)
 	# Determine the upload target name
 	set(uploadTarget "fossilUpload.${target}")
 
-	# Determine the source native path
-	file(TO_NATIVE_PATH "${outputPath}" outputPathNative)
-
 	# Determine the base name of the output
 	squirreljme_basename_path(outputBase "${outputPath}")
 
@@ -36,6 +33,9 @@ macro(squirreljme_fossil_upload target)
 	# Notice
 	message(STATUS "Upload '${outputPath}' -> '${uvPath}'...")
 	message(DEBUG "Source: ${target} ${outputPath} ${outputType}")
+
+	# Determine the source native path
+	file(TO_NATIVE_PATH "${outputPath}" outputPathNative)
 
 	# Add in the upload command
 	add_custom_target(${uploadTarget}
@@ -61,7 +61,7 @@ macro(squirreljme_fossil_upload target)
 		add_dependencies(fossilUpload.onlyNatives
 			${uploadTarget})
 	endif()
-endmacro()
+endfunction()
 
 # Fossil download available and exists?
 function(squirreljme_fossil_downloadable result uvPath)
