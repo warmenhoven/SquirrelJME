@@ -28,7 +28,7 @@ include(ExternalProject)
 
 # Declare project
 project(libEmulatorBase
-    LANGUAGES C)
+	LANGUAGES C)
 
 # We want to forward as many CMAKE_ commands to the target NanoCoat as
 # possible
@@ -308,7 +308,7 @@ target_include_directories(libEmulatorBase PRIVATE
 # Libraries for the build
 target_link_directories(libEmulatorBase PRIVATE
 	"${SQUIRRELJME_NANOCOAT_BINARY_DIR}/bin")
-target_link_libraries(libEmulatorBase PUBLIC
+squirreljme_link_libraries_required(libEmulatorBase PUBLIC
 	"${SQUIRRELJME_REQUIRED_LIBS}"
 	BaseStatic
 	jvm)
