@@ -7,49 +7,55 @@
 // See license.mkd for licensing and copyright information.
 // ---------------------------------------------------------------------------
 
-package com.nttdocomo.util;
+package cc.squirreljme.runtime.media;
 
 import cc.squirreljme.runtime.cldc.annotation.KeepWhenCompacting;
 import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
-import java.lang.ref.Reference;
-import java.util.TimerTask;
+import java.util.Queue;
 
 /**
- * Listener for timer tasks.
+ * Handles event dispatch.
  *
- * @since 2024/12/05
+ * @since 2025/06/03
  */
 @KeepWhenCompacting
-final class __ExpireListener__
-	extends TimerTask
+final class __DispatchRunner__
+	implements Runnable
 {
-	/** The expiration store to use. */
-	private final __ExpireStore__ _expire;
-	
-	/**
-	 * Initializes the expiration listener.
-	 *
-	 * @param __expire The expiration storage to use.
-	 * @throws NullPointerException On null arguments.
-	 * @since 2024/12/05
-	 */
-	@KeepWhenCompacting
-	__ExpireListener__(__ExpireStore__ __expire)
-		throws NullPointerException
-	{
-		if (__expire == null)
-			throw new NullPointerException("NARG");
-		
-		this._expire = __expire;
-	}
-	
 	/**
 	 * {@inheritDoc}
-	 * @since 2024/12/05
+	 *
+	 * @since 2025/06/03
 	 */
 	@Override
 	public void run()
 	{
-		this._expire.run();
+		Queue<__ListenerEvent__> queue = ListenerDispatch._QUEUE;
+		for (;;)
+		{
+			synchronized (ListenerDispatch.class)
+			{
+				// Get the next event
+				__ListenerEvent__ event = queue.poll();
+				if (event == null)
+				{
+					// Wait for more events as there are none
+					try
+					{
+						ListenerDispatch.class.wait(1000);
+					}
+					catch (InterruptedException ignored)
+					{
+					}
+					
+					// Try reading the next event
+					continue;
+				}
+				
+				// Handle event
+				event._player.__handleEvent(event._eventType,
+					event._eventValue, event._nanoTime);
+			}
+		}
 	}
 }
