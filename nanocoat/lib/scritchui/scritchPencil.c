@@ -181,8 +181,8 @@ static const sjme_scritchui_pencilFunctions sjme_scritchpen_core_functions =
 	sjme_sm(.drawRect, sjme_scritchpen_core_drawRect),
 	sjme_sm(.drawRegion, sjme_scritchpen_core_drawRegion),
 	sjme_sm(.drawRoundRect, sjme_scritchpen_core_drawRoundRect),
-	sjme_sm(.drawTriangle, sjme_scritchpen_core_drawTriangle),
 	sjme_sm(.drawSubstring, sjme_scritchpen_core_drawSubstring),
+	sjme_sm(.drawTriangle, sjme_scritchpen_core_drawTriangle),
 	sjme_sm(.drawXRGB32Region, sjme_scritchpen_core_drawXRGB32Region),
 	sjme_sm(.fillArc, sjme_scritchpen_core_fillArc),
 	sjme_sm(.fillPolygon, sjme_scritchpen_core_fillPolygon),
@@ -207,7 +207,7 @@ static const sjme_scritchui_pencilFunctions sjme_scritchpen_core_functions =
 static const sjme_scritchui_pencilFunctions
 	sjme_scritchpen_coreSerial_functions =
 {
-	sjme_sm(.close, sjme_scritchpen_core_close),
+	sjme_sm(.close, sjme_scritchpen_coreSerial_close),
 	sjme_sm(.copyArea, sjme_scritchpen_coreSerial_copyArea),
 	sjme_sm(.drawArc, sjme_scritchpen_coreSerial_drawArc),
 	sjme_sm(.drawChar, sjme_scritchpen_coreSerial_drawChar),
@@ -245,23 +245,23 @@ static const sjme_scritchui_pencilFunctions
 static const sjme_scritchui_pencilUtilFunctions
 	sjme_scritchpen_coreUtil_functions =
 {
-	sjme_sm(.blendRGBInto, sjme_scritchpen_coreUtil_blendRGBInto),
 	sjme_sm(.applyAnchor, sjme_scritchpen_coreUtil_applyAnchor),
 	sjme_sm(.applyCoordinateAdj, sjme_scritchpen_coreUtil_applyCoordinateAdj),
 	sjme_sm(.applyRotateScale, sjme_scritchpen_coreUtil_applyRotateScale),
 	sjme_sm(.applyTranslate, sjme_scritchpen_coreUtil_applyTranslate),
-	sjme_sm(.pfScanGet, sjme_scritchpen_coreUtil_pfScanGet),
-	sjme_sm(.pfScanPut, sjme_scritchpen_coreUtil_pfScanPut),
+	sjme_sm(.blendRGBInto, sjme_scritchpen_coreUtil_blendRGBInto),
 	sjme_sm(.pfScanBits, sjme_scritchpen_coreUtil_pfScanBits),
 	sjme_sm(.pfScanBytes, sjme_scritchpen_coreUtil_pfScanBytes),
+	sjme_sm(.pfScanGet, sjme_scritchpen_coreUtil_pfScanGet),
+	sjme_sm(.pfScanPut, sjme_scritchpen_coreUtil_pfScanPut),
 	sjme_sm(.pfScanToPf, sjme_scritchpen_coreUtil_pfScanToPf),
 	sjme_sm(.pfScanToRgb, sjme_scritchpen_coreUtil_pfScanToRgb),
+	sjme_sm(.rawScanToRgb, sjme_scritchpen_coreUtil_rawScanToRgb),
 	sjme_sm(.rgbScanFill, sjme_scritchpen_coreUtil_rgbScanFill),
 	sjme_sm(.rgbScanGet, sjme_scritchpen_coreUtil_rgbScanGet),
 	sjme_sm(.rgbScanPut, sjme_scritchpen_coreUtil_rgbScanPut),
 	sjme_sm(.rgbScanToPf, sjme_scritchpen_coreUtil_rgbScanToPf),
 	sjme_sm(.rgbScanToRaw, sjme_scritchpen_coreUtil_rgbScanToRaw),
-	sjme_sm(.rawScanToRgb, sjme_scritchpen_coreUtil_rawScanToRgb),
 };
 
 sjme_errorCode sjme_scritchpen_initStatic(
