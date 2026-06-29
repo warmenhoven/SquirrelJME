@@ -253,15 +253,15 @@ libretro-build-windows-x64:
     - .libretro-windows-cmake-x86_64
     - .core-nanocoat
 
-libretro-build-windows-msvc19-x86:
-  extends:
-    - .libretro-windows-msvc19-cmake-x86
-    - .core-nanocoat
+#libretro-build-windows-msvc19-x86:
+#  extends:
+#    - .libretro-windows-msvc19-cmake-x86
+#    - .core-nanocoat
 
-libretro-build-windows-msvc19-x64:
-  extends:
-    - .libretro-windows-msvc19-cmake-x64
-    - .core-nanocoat
+#libretro-build-windows-msvc19-x64:
+#  extends:
+#    - .libretro-windows-msvc19-cmake-x64
+#    - .core-nanocoat
 
 libretro-build-webos-armv7a:
   extends:
