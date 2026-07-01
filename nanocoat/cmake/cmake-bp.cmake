@@ -13,12 +13,10 @@
 # CMake 3.1+ Policies
 # Note that before CMP0054 is set, this is not capable of using the variable
 # Need to use VERSION_GREATER as VERSION_GREATER_EQUAL does not exist
-if(CMAKE_VERSION VERSION_GREATER "3.0")
-	# Only interpret if() arguments as variables or keywords when unquoted.
-	# This must be set first
-	message(STATUS "Setting policy CMP0054...")
-	cmake_policy(SET CMP0054 NEW)
-endif()
+# Only interpret if() arguments as variables or keywords when unquoted.
+# This must be set first
+message(STATUS "Setting policy CMP0054...")
+cmake_policy(SET CMP0054 NEW)
 
 # Spliced version
 set(squirreljme_bp_version_splice "${CMAKE_VERSION}")
@@ -37,25 +35,29 @@ message(STATUS
 # So this must use VERSION_GREATER or something else
 # Hence, the complication unfortunately
 macro(squirreljme_bp_version_test majorVer minorVer set)
-	if (squirreljme_bp_version_major EQUAL ${majorVer})
-		if(squirreljme_bp_version_minor GREATER ${minorVer})
+	if("${CMAKE_VERSION}" VERSION_GREATER "${majorVer}.${minorVer}")
+		set(${set} YES)
+	elseif(${squirreljme_bp_version_major} EQUAL ${majorVer})
+		if(${squirreljme_bp_version_minor} GREATER ${minorVer})
 			set(${set} YES)
-		elseif(squirreljme_bp_version_minor EQUAL ${minorVer})
+		elseif(${squirreljme_bp_version_minor} EQUAL ${minorVer})
 			set(${set} YES)
 		else()
 			set(${set} NO)
 		endif()
 	else()
-		if(squirreljme_bp_version_major GREATER ${majorVer})
+		if(${squirreljme_bp_version_major} GREATER ${majorVer})
 			set(${set} YES)
-		else()
-			if(squirreljme_bp_version_minor GREATER ${minorVer})
+		elseif(${squirreljme_bp_version_major} EQUAL ${majorVer})
+			if(${squirreljme_bp_version_minor} GREATER ${minorVer})
 				set(${set} YES)
-			elseif(squirreljme_bp_version_minor EQUAL ${minorVer})
+			elseif(${squirreljme_bp_version_minor} EQUAL ${minorVer})
 				set(${set} YES)
 			else()
 				set(${set} NO)
 			endif()
+		else()
+			set(${set} NO)
 		endif()
 	endif()
 
@@ -66,6 +68,7 @@ endmacro()
 # Version tests
 squirreljme_bp_version_test(3 1 squirreljme_bp_version_3_1)
 squirreljme_bp_version_test(3 3 squirreljme_bp_version_3_3)
+squirreljme_bp_version_test(3 12 squirreljme_bp_version_3_12)
 squirreljme_bp_version_test(3 13 squirreljme_bp_version_3_13)
 squirreljme_bp_version_test(3 14 squirreljme_bp_version_3_14)
 squirreljme_bp_version_test(3 17 squirreljme_bp_version_3_17)
@@ -92,7 +95,8 @@ set(SQUIRRELJME_BP_LIST_FILE "${CMAKE_CURRENT_LIST_FILE}")
 set(SQUIRRELJME_BP_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 # CMake 3.3+ Policies
-if(squirreljme_bp_version_3_3)
+if(squirreljme_bp_version_3_3 OR
+	"${CMAKE_VERSION}" VERSION_GREATER "3.2")
 	# Support new if() IN_LIST operator.
 	message(STATUS "Setting policy CMP0057...")
 	cmake_policy(SET CMP0057 NEW)
@@ -121,6 +125,13 @@ macro(squirreljme_bp_return_propagate inOutVariable)
 		return()
 	endif()
 endmacro()
+
+# Adding compile definitions was done in a slightly different way
+if(NOT squirreljme_bp_version_3_12)
+	macro(add_compile_definitions varVal)
+		add_definitions("-D${varVal}")
+	endmacro()
+endif()
 
 # squirreljme_bp_check_linker_flag
 # This according to the CMake documentation is a convenience method that
@@ -253,10 +264,10 @@ function(squirreljme_bp_file_size inFileName outVariable)
 
 		# Cut in half
 		if(squirreljme_bp_version_3_13)
-			math(EXPR ${outVariable} "${outVariable} / 2"
+			math(EXPR ${outVariable} "${${outVariable}} / 2"
 				OUTPUT_FORMAT DECIMAL)
 		else()
-			math(EXPR ${outVariable} "${outVariable} / 2")
+			math(EXPR ${outVariable} "${${outVariable}} / 2")
 		endif()
 
 		# Return the resultant size

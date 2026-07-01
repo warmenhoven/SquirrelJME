@@ -94,6 +94,7 @@ list(APPEND SQUIRRELJME_SYSTEM_MAP
 	"emscripten!emscripten"
 	"macosx!macosx"
 	"macosx!darwin"
+	"macosx!apple-darwin8"
 	"3ds!3ds"
 	"windowsce!wince-cegcc"
 	"palmos!palmos")
