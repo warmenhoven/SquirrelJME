@@ -236,7 +236,8 @@ function(squirreljme_identify_by_defines_list outSystem outArch defines)
 		set(hasSystem "playstation2")
 	elseif("PSP" IN_LIST defines)
 		set(hasSystem "psp")
-	elseif("HAVE_LIBNX" IN_LIST defines)
+	elseif("HAVE_LIBNX" IN_LIST defines OR
+		"__DEVKITA64__" IN_LIST defines)
 		set(hasSystem "switch")
 	elseif("IOS" IN_LIST defines)
 		set(hasSystem "ios")
@@ -610,15 +611,24 @@ function(squirreljme_identify_by_current outSystem outArch)
 		"${CMAKE_C_COMPILER_ID}" STREQUAL "IBMClang" OR
 		"${isGcc}" GREATER_EQUAL "0" OR
 		"${isSDCC}" GREATER_EQUAL "0")
-		message(STATUS "Identifying compiler via GCC...")
+		# Fallback to CC? This can happen in older versions of CMake where CC
+		# is set but CMake has yet to set CMAKE_C_COMPILER for some reason.
+		if("${CMAKE_C_COMPILER}" STREQUAL "")
+			set(useGcc "${CC}")
+		else()
+			set(useGcc "${CMAKE_C_COMPILER}")
+		endif()
+
+		# Identify
+		message(STATUS "Identifying compiler via GCC (${useGcc})...")
 		squirreljme_identify_by_gcc(hasSystem hasArch
-			"${CMAKE_C_COMPILER}")
+			"${useGcc}")
 
 		# If still not found, emit flags for debugging
 		if("${hasSystem}" STREQUAL "unknown" OR
 			"${hasArch}" STREQUAL "unknown")
 			# Get all defines
-			squirreljme_defines_gcc(defines "${gccExe}")
+			squirreljme_defines_gcc(defines "${useGcc}")
 
 			# Banner
 			message(STATUS "*****************************************")
@@ -732,6 +742,13 @@ squirreljme_identify_by_cmake(SQUIRRELJME_HOST_SYSTEM SQUIRRELJME_HOST_ARCH
 	"${CMAKE_HOST_SYSTEM_NAME}" "${CMAKE_HOST_SYSTEM_PROCESSOR}")
 message(STATUS "Detected Host System: "
 	"${SQUIRRELJME_HOST_SYSTEM}/${SQUIRRELJME_HOST_ARCH}")
+
+# An unknown system?
+if("${SQUIRRELJME_SYSTEM}" STREQUAL "unknown")
+	set(SQUIRRELJME_IS_UNKNOWN TRUE)
+else()
+	set(SQUIRRELJME_IS_UNKNOWN FALSE)
+endif()
 
 # Bare metal system?
 if("${SQUIRRELJME_SYSTEM}" STREQUAL "bios" OR
