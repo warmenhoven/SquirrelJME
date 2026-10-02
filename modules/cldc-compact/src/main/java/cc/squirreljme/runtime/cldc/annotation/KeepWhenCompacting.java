@@ -23,10 +23,11 @@ import java.lang.annotation.Target;
  * @since 2026/06/03
  */
 @Documented
-@Retention(value=RetentionPolicy.CLASS)
+@Retention(value=RetentionPolicy.RUNTIME)
 @Target(value={ElementType.CONSTRUCTOR, ElementType.FIELD,
 	ElementType.METHOD, ElementType.TYPE})
 @SquirrelJMEVendorApi
+@KeepAbsolutelyEverything
 public @interface KeepWhenCompacting
 {
 }

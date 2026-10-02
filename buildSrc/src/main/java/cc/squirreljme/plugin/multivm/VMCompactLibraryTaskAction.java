@@ -42,42 +42,106 @@ public class VMCompactLibraryTaskAction
 	/** The optimizations to use. */
 	static final String[] _OPTIMIZATIONS = new String[]
 		{
-			// ProGuard's method inlining causes code to break! So disable
-			// it otherwise it generates an incorrect StackMapTable...
-			// *facepaw*
-			"!method/inlining/*",
+			"!class/marking/final",
+			"!class/merging/horizontal",
+			"!class/merging/vertical",
+			"!class/merging/wrapper",
+			"!class/unboxing/enum",
+			
+			"!code/allocation/variable",
+			"!code/merging",
+			"!code/removal/advanced",
+			"!code/removal/exception",
+			"!code/removal/simple",
+			"!code/removal/variable",
+			"!code/simplification/advanced",
+			"!code/simplification/arithmetic",
+			"!code/simplification/branch",
+			"!code/simplification/cast",
+			"!code/simplification/field",
+			"!code/simplification/math",
+			"!code/simplification/object",
+			"!code/simplification/string",
+			"!code/simplification/variable",
+			
+			"!field/generalization/class",
+			"!field/marking/private",
+			"!field/propagation/value",
+			"!field/removal/writeonly",
+			"!field/specialization/type",
+			
+			"!method/generalization/class",
+			"!method/inlining/short",
+			"!method/inlining/tailrecursion",
+			"!method/inlining/unique",
+			"!method/marking/final",
+			"!method/marking/private",
+			"!method/marking/static",
+			"!method/marking/synchronized",
+			"!method/propagation/parameter",
+			"!method/propagation/returnvalue",
+			"!method/removal/parameter",
+			"!method/specialization/parametertype",
+			"!method/specialization/returntype",
+			
+			"!withcode/removal/advanced",
+			
+			/*
+			// Never allow access flag changes
+			"!class/marking/*",
+			"!field/marking/*",
+			"!method/marking/*",
+			
+			// Never allow generalizing/specialization from one type to another
+			// For example: Arrays.<T>asList() becomes
+			// java.util.List
+			"!field/generalization/*",
+			"!method/generalization/*",
+			// java.util.__ArraysList__ asList$158aa2d5(java.lang.Object[])
+			// java.lang.__CanSetPrintStream__ err$5f8ce416 -> err$5f8ce416
+			"!field/specialization/*",
+			"!method/specialization/*",
+			
+			// Never remove parameters, signatures must remain the same
+			"!method/removal/parameter",
 			
 			// There is optimization for object usage and such, however this
 			// is not always correct especially with brackets and native code
-			"!code/simplification/object",
-			
 			// Do the same for field load/store, as these can be used across
 			// native call chains which it has no idea about
+			"!code/simplification/object",
 			"!code/simplification/field",
 			
-			// These cause incompatible class change errors if such things
-			// were to be accessed
-			"!class/marking/final",
-			"!field/marking/private",
-			"!method/marking/private",
-			"!method/marking/static",
-			"!method/marking/final",
-			"!method/marking/synchronized",
+			// Do not optimize casts, as those can be used for class casts
+			// but also there seems to be a bug where casting an unknown type
+			// to a known type will cause issues
+			"!code/simplification/cast",
 			
-			// Do not propagate parameters to method calls nor remove them
-			"!method/propagation/parameter",
-			"!method/removal/parameter",
+			// Assume all objects and branches are taken, this is similar to
+			// above as there needs to be checks for everything and considering
+			// that this is library code this could remove those checks. It
+			// can also assume that because no other part of the library calls
+			// into this code, that the code is dead anyway.
+			"!code/removal/advanced",
+			"!code/simplification/object",
+			"!code/simplification/branch",
 			
-			// Never specialize the parameter and return types, this breaks
-			// signatures! For example: Arrays.<T>asList() becomes
-			// java.util.__ArraysList__ asList$158aa2d5(java.lang.Object[])
-			"!method/specialization/class",
-			"!method/specialization/parametertype",
-			"!method/specialization/returntype",
-			// Ditto for fields 
-			// java.lang.__CanSetPrintStream__ err$5f8ce416 -> err$5f8ce416
-			"!field/generalization/class",
-			"!field/specialization/type",
+			// Variable optimization seems to be broken at times as well
+			"!code/allocation/variable",
+			
+			// Never remove fields
+			"!field/removal/writeonly",
+			
+			// Inlining methods does usually increase code size, but it also
+			// can cause issues where behavior gets changed
+			"!method/inlining/*",
+			
+			// Do not merge classes together, either vertically or
+			// horizontally... this otherwise has Number optimized away despite
+			// being marked as @Api because it is only extended from and has
+			// nothing of its own
+			"!class/merging/*",
+			 */
 		};
 	
 	/** Base configuration. */
@@ -90,18 +154,35 @@ public class VMCompactLibraryTaskAction
 			"-dontwarn", "org.jetbrains.annotations.**",
 			"-dontwarn", "org.intellij.lang.annotations.**",
 			
-			// Try optimizing multiple times
-			"-optimizationpasses", "4",
-			
 			// Adjust manifest resources
 			"-adaptresourcefilenames", "**",
 			"-adaptresourcefilecontents",
 				"META-INF/MANIFEST.MF,META-INF/services/**",
 			
-			// Consumers of the libraries/APIs need to see the annotation
-			// information if it is there, to make sure it is retained
-			"-keepattributes", "*Annotation*,Exceptions,Signature",
+			// Do not let ProGuard consider classes as up-to-date itself,
+			// the build system handles this for us
+			"-forceprocessing",
 		};
+	
+	/** Stanza for keeping standard APIs. */
+	public static final String STANZA_API =
+		"-keep,allowoptimization,includedescriptorclasses";
+	
+	/** Stanza for keeping standard APIs, with less pulling in. */
+	public static final String STANZA_API_NO_DESC =
+		"-keep,allowoptimization";
+	
+	/** Stanza for compacting APIs. */
+	public static final String STANZA_COMPACT =
+		"-keep,allowoptimization,allowobfuscation";
+	
+	/** Stanza for keeping everything. */
+	public static final String STANZA_KEEP_ALL =
+		"-keep,includecode";
+	
+	/** Stanza for keeping everything, but only members. */
+	public static final String STANZA_KEEP_ALL_ONLY_MEMBERS =
+		"-keepclasseswithmembers,includecode";
 	
 	/** Settings used to strip debugging. */
 	static final String[] _STRIP_DEBUG = new String[]
@@ -231,16 +312,16 @@ public class VMCompactLibraryTaskAction
 	static final String[] _REFLECTION = new String[]
 		{
 			// Do not trash enumerations as we need those to work properly
-			"-keepclassmembers", "class", "*",
-				"extends", "java.lang.Enum", "{",
+			"-keepclassmembers", "enum", "*", "{",
 				"<fields>", ";",
 				"public", "static", "**[]", "values",
 					"(", ")", ";",
 				"public", "static", "**", "valueOf",
 					"(", "java.lang.String", ")", ";",
 				"}",
-			"-keepclassmembernames", "class", "*",
-				"extends", "java.lang.Enum", "{",
+			
+			"-keepclassmembernames", 
+			"enum", "*", "{",
 				"<fields>", ";",
 				"public", "static", "**[]", "values",
 					"(", ")", ";",
@@ -251,21 +332,25 @@ public class VMCompactLibraryTaskAction
 			// Keep non-static constructors, since they can be called and
 			// utilized... if they are removed then some things actually break
 			// and stop working properly
-			"-keepclassmembers", "class", "*", "{",
+			"-keepclassmembers", 
+			"class", "*", "{",
 					"!private", "<init>", "(", "...", ")", ";",
 				"}",
 			
 			// Keep anything that can be launched
-			"-keepclasseswithmembers", "class", "*", "{",
+			"-keepclasseswithmembers", 
+			"class", "*", "{",
 				"public", "static", "void", "main", "(",
 					"java.lang.String[]", ")", ";",
 			"}",
-			"-keep", "class", "*", "extends",
+			"-keep",
+			"class", "*", "extends",
 				"javax.microedition.midlet.MIDlet", "{",
 				"void", "destroyApp()", ";",
 				"void", "startApp()", ";",
 			"}",
-			"-keep", "class", "*", "extends",
+			"-keep", 
+			"class", "*", "extends",
 				"com.nttdocomo.ui.IApplication",
 		};
 	
@@ -273,103 +358,91 @@ public class VMCompactLibraryTaskAction
 	static final String[] _CALLBACKS = new String[]
 		{
 			// Specific implements
-			"-keep,includecode,includedescriptorclasses", 
-				"class", "*", "implements",
-				"java.lang.Runnable",
-			"-keep,includecode,includedescriptorclasses", 
-				"class", "*", "implements",
-				"cc.squirreljme.jvm.mle.scritchui.callbacks.ScritchListener",
+			VMCompactLibraryTaskAction.STANZA_KEEP_ALL_ONLY_MEMBERS, 
+			"class", "*", "implements",
+				"java.lang.Runnable", "{",
+			"}",
+			
+			VMCompactLibraryTaskAction.STANZA_KEEP_ALL_ONLY_MEMBERS,
+			"class", "*", "implements",
+				"cc.squirreljme.jvm.mle.callbacks.ShelfCallback", "{",
+			"}",
+			
+			VMCompactLibraryTaskAction.STANZA_KEEP_ALL_ONLY_MEMBERS,
+			"class", "*", "implements",
+			"cc.squirreljme.jvm.mle.scritchui.callbacks.ScritchListener", "{",
+			"}",
 			
 			// Specific annotated methods
-			"-keepclasseswithmembers,includecode,includedescriptorclasses", 
-				"class", "*", "{",
-				"@cc.squirreljme.jvm.mle.scritchui.annotation.ScritchEventLoop",
-					"<methods>", ";",
-				"}",
+			VMCompactLibraryTaskAction.STANZA_KEEP_ALL_ONLY_MEMBERS,
+			"class", "*", "{",
+			"@cc.squirreljme.jvm.mle.scritchui.annotation.ScritchEventLoop",
+				"<methods>", ";",
+			"}",
+			
+			VMCompactLibraryTaskAction.STANZA_KEEP_ALL_ONLY_MEMBERS,
+			"class", "*", "{",
+				"@cc.squirreljme.runtime.lcdui.SerializedEvent",
+				"<methods>", ";",
+			"}",
+			
+			// Keep anything that has a native method
+			VMCompactLibraryTaskAction.STANZA_KEEP_ALL_ONLY_MEMBERS,
+			"class", "*", "{",
+				"native", "<methods>", ";",
+			"}",
 		};
 	
 	/**
 	 * Settings to use in the configuration for keeping, etc.
 	 * 
-	 * The way this works below is that any setting which has
-	 * {@code "@cc.squirreljme.runtime.cldc.annotation.Api"} will be duplicated
-	 * and replaced with
-	 * {@code "@cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi"}
-	 * so that rules are not annoyingly duplicated as ProGuard debugging is
-	 * difficult, and vice versa.
+	 * The way this works below is that any setting which will replace all
+	 * occurrences of class with interface and enum.
 	 */
 	static final String[] _PARSE_SETTINGS = new String[]
 		{
-			// Note, ProGuard says class means both class and interface,
-			// however this does not seem to be the case at all... So, no
-			// idea really!
+			// NOTE: ProGuard says "class" includes classes and interfaces
+			// in its documentation... however, observation says otherwise
+			// There is code below that will change all "class" to "enum"
+			// and "interface" so they are all shared and there is no
+			// duplication here
 			
-			// Do not touch interfaces that are public API _in any way_!
-			// This tends to just break everything...
-			"-keep",
+			// Anything that is a bracket must be kept, no matter what
+			VMCompactLibraryTaskAction.STANZA_KEEP_ALL, 
+				"class", "*", "implements",
+				"cc.squirreljme.jvm.mle.brackets.Bracket", "{",
+			"}",
+			
+			// Standard API
+			VMCompactLibraryTaskAction.STANZA_API_NO_DESC,
 			"@cc.squirreljme.runtime.cldc.annotation.Api",
-			"public", "interface", "*", "{",
-				"*", ";",
-			"}",
-			
-			// Additionally, do not touch GhostObjects and any extension of
-			// them as they are purely VM synthetic and special
-			"-keep,includecode,includedescriptorclasses",
-			"@cc.squirreljme.jvm.mle.annotation.GhostObject",
-			"public", "interface", "*", "{",
-				"*", ";",
-			"}",
-			"-keep,includecode,includedescriptorclasses",
-			"public", "interface", "*", "implements",
-			"@cc.squirreljme.jvm.mle.annotation.GhostObject", "*", "{",
-				"*", ";",
-			"}",
-			
-			// ProGuard for "-keepclasseswithmembers" says "Specifies classes
-			// and class members to be preserved, on the condition that 
-			// all the specified class members are present."... does this mean
-			// that everything has to match?
-			
-			// Ditto for bridge methods, Override is a source retention
-			// annotation, so it gets discarded. The same goes for synthetic.
-			// I have no idea if ProGuard even works with this flag since it
-			// seems to do nothing
-			
-			// Optimize/shrink anything that is non-public API
-			"-keep,allowoptimization",
-			"@cc.squirreljme.runtime.cldc.annotation.Api",
-			"!interface", "*", "{",
+			"public", "class", "*", "{",
 				"@cc.squirreljme.runtime.cldc.annotation.Api",
-					"!private", "*", ";",
-			"}",
-			"-keep,allowoptimization",
-			"@cc.squirreljme.runtime.cldc.annotation.Api",
-			"interface", "*", "{",
-				"@cc.squirreljme.runtime.cldc.annotation.Api",
-					"!private", "*", ";",
+				"!private", "*", ";",
 			"}",
 			
-			// Never touch anything that has anything to do with any native
-			// method
-			"-keepclasseswithmembers,includecode,includedescriptorclasses",
-			"class", "*", "{",
-				"native", "<methods>", ";",
+			// SquirrelJMEVendorApi
+			VMCompactLibraryTaskAction.STANZA_API_NO_DESC,
+			"@cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi",
+			"public", "class", "*", "{",
+				"@cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi",
+				"!private", "*", ";",
 			"}",
 			
-			// Use KeepWhenCompacting to optimize and obfuscate, but not to
-			// shrink
-			"-keep,includecode,includedescriptorclasses",
-			"class", "*", "{",
-				"@cc.squirreljme.runtime.cldc.annotation.KeepWhenCompacting",
-					"!private", "*", ";",
-			"}",
-			
-			// Do the same for fully annotated classes (not recommended)
-			"-keep,includecode,includedescriptorclasses",
+			// KeepWhenCompacting
+			VMCompactLibraryTaskAction.STANZA_COMPACT,
 			"@cc.squirreljme.runtime.cldc.annotation.KeepWhenCompacting",
 			"class", "*", "{",
-				"!private", "*", ";",
-			"}"
+				"@cc.squirreljme.runtime.cldc.annotation.KeepWhenCompacting",
+				"*", ";",
+			"}",
+			
+			// KeepAbsolutelyEverything
+			VMCompactLibraryTaskAction.STANZA_KEEP_ALL,
+			"@cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything",
+			"class", "*", "{",
+				"*", ";",
+			"}",
 		};
 	
 	/** Settings for tests. */
@@ -396,11 +469,6 @@ public class VMCompactLibraryTaskAction
 				"<fields>", ";",
 				"<methods>", ";",
 			"}",
-			
-			// Keep more debugging attributes, so we can more easily figure
-			// things out when debugging
-			"-keepattributes", "*Annotation*,SourceFile,LineNumberTable," +
-				"LocalVariableTable",
 		};
 	
 	/** The source set used. */
@@ -512,6 +580,16 @@ public class VMCompactLibraryTaskAction
 		SquirrelJMEPluginConfiguration projectConfig =
 			SquirrelJMEPluginConfiguration.configuration(__task.getProject());
 		
+		// Set an inline limit for ProGuard, so it does not produce very large
+		// inlined methods.
+		try
+		{
+			System.setProperty("maximum.resulting.code.length", "2000");
+		}
+		catch (SecurityException ignored)
+		{
+		}
+		
 		// Run the task
 		Path tempJarFile = null;
 		Path tempInputMapFile = null;
@@ -592,57 +670,43 @@ public class VMCompactLibraryTaskAction
 			
 			// Base options to use
 			List<String> proGuardOptions = new ArrayList<>();
+			
+			// Strip all debug info
+			proGuardOptions.addAll(
+				Arrays.asList(VMCompactLibraryTaskAction._STRIP_DEBUG));
+			
 			// Add base configuration settings
 			proGuardOptions.addAll(
 				Arrays.asList(VMCompactLibraryTaskAction._BASE_CONFIG));
 			
-			// API and SquirrelJMEVendorAPI are the same, except using
-			// different labels... it is very annoying to have
-			// duplicate rules for both due to ProGuard limitations
-			List<String> baseApi = new ArrayList<>();
-			List<String> squirrelApi = new ArrayList<>();
-			for (String classy : Arrays.asList("class"/*, "interface"*/))
-				for (String opt : VMCompactLibraryTaskAction._PARSE_SETTINGS)
-				{
-					// Duplicate API to SquirrelJME API?
-					// Do handle situations where it is mistyped
-					if (opt.equals("@cc.squirreljme.runtime.cldc." +
-						"annotation.Api") || opt.equals("@cc.squirreljme." +
-						"runtime.cldc.annotation.SquirrelJMEVendorApi"))
-					{
-						baseApi.add("@cc.squirreljme.runtime.cldc." +
-							"annotation.Api");
-						squirrelApi.add("@cc.squirreljme.runtime.cldc." +
-							"annotation.SquirrelJMEVendorApi");
-					}
-					
-					// Change class to something else?
-					else if (opt.equals("class"))
-					{
-						baseApi.add(classy);
-						squirrelApi.add(classy);
-					}
-					
-					// Otherwise, plainly copy it
-					else
-					{
-						baseApi.add(opt);
-						squirrelApi.add(opt);
-					}
-			}
-			
-			// Base parsed settings, for both API types
-			proGuardOptions.addAll(baseApi);
-			proGuardOptions.addAll(squirrelApi);
-			
-			// Make sure reflection works
+			// Make sure reflection works, at the minimum
 			proGuardOptions.addAll(
 				Arrays.asList(VMCompactLibraryTaskAction._REFLECTION));
 			
 			// Keep all callbacks, since they get stripped as nothing
-			// sees them
+			// sees them and everything just breaks
 			proGuardOptions.addAll(
 				Arrays.asList(VMCompactLibraryTaskAction._CALLBACKS));
+			
+			// API and SquirrelJMEVendorAPI are the same, except using
+			// different labels... it is very annoying to have
+			// duplicate rules for both due to ProGuard limitations
+			// Has to be done for enum as well
+			List<String> baseApi = new ArrayList<>();
+			for (String classy : Arrays.asList("class", "interface", "enum"))
+				for (String opt : VMCompactLibraryTaskAction._PARSE_SETTINGS)
+				{
+					// Change class to something else?
+					if (opt.equals("class"))
+						baseApi.add(classy);
+					
+					// Otherwise, plainly copy it
+					else
+						baseApi.add(opt);
+			}
+			
+			// Base parsed settings, for all interface types
+			proGuardOptions.addAll(baseApi);
 			
 			// Strip all debug info
 			proGuardOptions.addAll(
@@ -694,14 +758,45 @@ public class VMCompactLibraryTaskAction
 			config.android = false;
 			config.microEdition = false;
 			
-			// Reduce space and obfuscate, but we cannot remove everything at
-			// this time
-			config.shrink = false;
-			config.optimizationPasses = 2;
-			/*config.optimize = false;*/
+			// Consumers of the libraries/APIs need to see the annotation
+			// information if it is there, to make sure it is retained
+			if (!isTesting)
+				config.keepAttributes = Arrays.asList(
+					"RuntimeInvisibleAnnotations",
+					"RuntimeVisibleAnnotations",
+					"Exceptions",
+					"Signature");
+				
+			// Keep more debugging attributes, so we can more easily figure
+			// things out when debugging
+			else
+				config.keepAttributes = Arrays.asList("*Annotation*",
+					"Exceptions", "Signature", "LineNumberTable",
+					"LocalVariableTable", "LocalVariableTypeTable",
+					"SourceFile");
+			
+			// Do not skip parsing classes
+			config.skipNonPublicLibraryClasses = false;
+			config.skipNonPublicLibraryClassMembers = false;
+			
+			// These will break in general
+			config.mergeInterfacesAggressively = false;
+			config.allowAccessModification = false;
+			
+			// Not Kotlin
+			config.enableKotlinAsserter = false;
+			config.keepKotlinMetadata = false;
+			config.dontProcessKotlinMetadata = true;
+			
+			// Reduce space and obfuscate
+			config.shrink = !isTesting;
+			config.obfuscate = !isTesting;
+			config.optimize = !isTesting;
+			config.optimizationPasses = 6;
 			config.flattenPackageHierarchy = "$" +
 				(projectConfig.javaDocErrorCode == null ? "??" :
 				projectConfig.javaDocErrorCode);
+			config.repackageClasses = config.flattenPackageHierarchy;
 			
 			// For mapping files, members do need to be unique
 			config.useUniqueClassMemberNames = true;
