@@ -26,6 +26,8 @@ mainClassName = "cc.squirreljme.vm.standalone.main.Main"
 dependencies {
 	implementation project(":emulators:springcoat-vm")
 	implementation project(":emulators:nanocoat-vm")
+
+	implementation project(":emulators:tool-classfile")
 	
 	// Debugger tool for quick usage
 	implementation project(":tools:squirreljme-debugger")
