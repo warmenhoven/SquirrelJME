@@ -7,17 +7,31 @@
 // See license.mkd for licensing and copyright information.
 // ---------------------------------------------------------------------------
 
-package net.multiphasicapps.tac;
+package net.multiphasicapps.io;
 
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
 import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
+import java.io.IOException;
 
 /**
- * An incomplete test, which allows for failure to occur.
+ * Similar to {@link BitSource} except that this supports reading multiple
+ * bits at once.
  *
- * @since 2025/03/27
+ * @since 2026/10/03
  */
-@SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
-public interface IncompleteTest
+@SquirrelJMEVendorApi
+public interface MultiBitSource
+	extends BitSource
 {
+	/**
+	 * Reads bits from the input source.
+	 *
+	 * @param __n The number of bits to read.
+	 * @param __msb If {@code true} the most significant bits are first.
+	 * @return The read data.
+	 * @throws IOException On read errors.
+	 * @since 2026/10/03
+	 */
+	@SquirrelJMEVendorApi
+	int readBits(int __n, boolean __msb)
+		throws IOException;
 }

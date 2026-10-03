@@ -9,6 +9,7 @@
 
 package net.multiphasicapps.collections;
 
+import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
 import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.util.AbstractList;
 import java.util.Iterator;
@@ -30,7 +31,7 @@ public abstract class UnmodifiableList<V>
 {
 	/** The list to wrap. */
 	@SquirrelJMEVendorApi
-	protected final List<V> wrapped;	
+	protected final List<V> wrapped;
 	
 	/**
 	 * Initializes the list which cannot be modified.
