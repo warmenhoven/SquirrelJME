@@ -17,8 +17,6 @@ import cc.squirreljme.jvm.launch.SuiteScanner;
 import cc.squirreljme.jvm.mle.JarPackageShelf;
 import cc.squirreljme.jvm.mle.ReflectionShelf;
 import cc.squirreljme.jvm.mle.brackets.JarPackageBracket;
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.midlet.MIDletStateChangeException;
@@ -37,7 +35,6 @@ public class DoJaMIDletAdapter
 	 * @since 2024/07/28
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected void destroyApp(boolean __uc)
 		throws MIDletStateChangeException
 	{
@@ -49,7 +46,6 @@ public class DoJaMIDletAdapter
 	 * @since 2024/07/28
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected void startApp()
 		throws MIDletStateChangeException
 	{

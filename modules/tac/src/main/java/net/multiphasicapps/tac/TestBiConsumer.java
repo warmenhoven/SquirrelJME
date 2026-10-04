@@ -9,8 +9,6 @@
 
 package net.multiphasicapps.tac;
 
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import org.junit.Test;
 
 /**
@@ -28,7 +26,6 @@ public abstract class TestBiConsumer<A, B>
 	 *
 	 * @since 2026/02/12
 	 */
-	@SquirrelJMEVendorApi
 	public TestBiConsumer()
 	{
 	}
@@ -42,7 +39,6 @@ public abstract class TestBiConsumer<A, B>
 	 * @since 2018/10/06
 	 */
 	@Test
-	@SquirrelJMEVendorApi
 	public abstract void test(A __a, B __b)
 		throws Throwable;
 	
@@ -52,7 +48,6 @@ public abstract class TestBiConsumer<A, B>
 	 */
 	@Override
 	@SuppressWarnings({"unchecked"})
-	@SquirrelJMEVendorApi
 	final Object __runTest(Object... __args)
 		throws Throwable
 	{

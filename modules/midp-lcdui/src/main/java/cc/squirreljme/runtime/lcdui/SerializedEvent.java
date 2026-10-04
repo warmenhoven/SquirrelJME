@@ -9,8 +9,6 @@
 
 package cc.squirreljme.runtime.lcdui;
 
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -27,7 +25,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-@SquirrelJMEVendorApi
 public @interface SerializedEvent
 {
 }

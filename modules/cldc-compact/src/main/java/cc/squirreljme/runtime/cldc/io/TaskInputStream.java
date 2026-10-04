@@ -14,7 +14,6 @@ import cc.squirreljme.jvm.mle.TaskShelf;
 import cc.squirreljme.jvm.mle.ThreadShelf;
 import cc.squirreljme.jvm.mle.brackets.TaskBracket;
 import cc.squirreljme.jvm.mle.constants.PipeErrorType;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -25,16 +24,13 @@ import java.io.InterruptedIOException;
  *
  * @since 2020/07/02
  */
-@SquirrelJMEVendorApi
 public final class TaskInputStream
 	extends InputStream
 {
 	/** The task to read from. */
-	@SquirrelJMEVendorApi
 	protected final TaskBracket task;
 	
 	/** The pipe descriptor. */
-	@SquirrelJMEVendorApi
 	protected final int fd;
 	
 	/**
@@ -43,7 +39,6 @@ public final class TaskInputStream
 	 * @throws NullPointerException On null arguments.
 	 * @since 2020/07/02
 	 */
-	@SquirrelJMEVendorApi
 	public TaskInputStream(TaskBracket __task, int __fd)
 		throws NullPointerException
 	{
@@ -62,7 +57,6 @@ public final class TaskInputStream
 	 */
 	@SuppressWarnings({"MagicNumber", "DuplicateThrows"})
 	@Override
-	@SquirrelJMEVendorApi
 	public int read()
 		throws InterruptedIOException, IOException
 	{
@@ -114,7 +108,6 @@ public final class TaskInputStream
 	 * @since 2020/07/02
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public int read(byte[] __b)
 		throws IOException
 	{
@@ -136,7 +129,6 @@ public final class TaskInputStream
 	 * @since 2020/07/02
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public int read(byte[] __b, int __o, int __l)
 		throws IOException
 	{

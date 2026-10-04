@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf.file.real;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import cc.squirreljme.runtime.cldc.full.attrib.ExtraFileAttributes;
 import cc.squirreljme.runtime.gcf.file.FileEndPoint;
@@ -27,11 +26,9 @@ import org.jetbrains.annotations.Nullable;
  *
  * @since 2025/12/27
  */
-@SquirrelJMEVendorApi
 public class SystemFileEndPoint
 	extends FileEndPoint
 {
-	@SquirrelJMEVendorApi
 	public SystemFileEndPoint(@NotNull UriGenericPart __part, int __mode,
 		@Nullable UriGenericPart __dotDot)
 		throws NullPointerException
@@ -42,7 +39,6 @@ public class SystemFileEndPoint
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	protected ExtraFileAttributes attachedAttributes()
 		throws SecurityException
 	{
@@ -50,7 +46,6 @@ public class SystemFileEndPoint
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	protected FileStore attachedFileStore()
 		throws SecurityException
 	{
@@ -58,7 +53,6 @@ public class SystemFileEndPoint
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	protected FileSystem attachedFileSystem()
 		throws SecurityException
 	{
@@ -66,7 +60,6 @@ public class SystemFileEndPoint
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	protected void listDirectory(@NotNull Map<String, UriGenericPart> __into)
 		throws IOException, NullPointerException, SecurityException
 	{
@@ -74,7 +67,6 @@ public class SystemFileEndPoint
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public void close()
 		throws IOException
 	{
@@ -86,7 +78,6 @@ public class SystemFileEndPoint
 	 * @since 2026/01/01
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected InputStream openInputStream()
 		throws IOException, SecurityException
 	{

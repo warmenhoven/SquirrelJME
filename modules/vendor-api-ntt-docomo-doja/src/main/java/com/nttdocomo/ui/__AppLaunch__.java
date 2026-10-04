@@ -10,8 +10,6 @@
 package com.nttdocomo.ui;
 
 import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.KeepWhenCompacting;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.midlet.ApplicationHandler;
 import cc.squirreljme.runtime.midlet.DoJaRuntime;
 import java.util.ArrayDeque;
@@ -33,7 +31,6 @@ final class __AppLaunch__
 	 * @throws Throwable On any exception.
 	 * @since 2020/02/29
 	 */
-	@SquirrelJMEVendorApi
 	public static void main(String... __args)
 		throws Throwable
 	{

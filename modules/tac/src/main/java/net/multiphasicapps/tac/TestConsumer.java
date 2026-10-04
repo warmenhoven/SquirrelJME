@@ -9,8 +9,6 @@
 
 package net.multiphasicapps.tac;
 
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import org.junit.Test;
 
 /**
@@ -27,7 +25,6 @@ public abstract class TestConsumer<A>
 	 *
 	 * @since 2026/02/12
 	 */
-	@SquirrelJMEVendorApi
 	public TestConsumer()
 	{
 	}
@@ -40,7 +37,6 @@ public abstract class TestConsumer<A>
 	 * @since 2018/10/06
 	 */
 	@Test
-	@SquirrelJMEVendorApi
 	public abstract void test(A __a)
 		throws Throwable;
 	
@@ -50,7 +46,6 @@ public abstract class TestConsumer<A>
 	 */
 	@Override
 	@SuppressWarnings({"unchecked"})
-	@SquirrelJMEVendorApi
 	final Object __runTest(Object... __args)
 		throws Throwable
 	{

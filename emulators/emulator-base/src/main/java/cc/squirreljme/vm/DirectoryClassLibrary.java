@@ -9,7 +9,6 @@
 
 package cc.squirreljme.vm;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,12 +19,10 @@ import java.nio.file.Path;
  *
  * @since 2020/04/19
  */
-@SquirrelJMEVendorApi
 public class DirectoryClassLibrary
 	implements VMClassLibrary
 {
 	/** The path of the library. */
-	@SquirrelJMEVendorApi
 	protected final Path path;
 	
 	/**
@@ -35,7 +32,6 @@ public class DirectoryClassLibrary
 	 * @throws NullPointerException On null arguments.
 	 * @since 2020/04/19
 	 */
-	@SquirrelJMEVendorApi
 	public DirectoryClassLibrary(Path __path)
 		throws NullPointerException
 	{
@@ -50,7 +46,6 @@ public class DirectoryClassLibrary
 	 * @since 2020/04/19
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String[] listResources()
 	{
 		throw Debugging.todo();
@@ -61,7 +56,6 @@ public class DirectoryClassLibrary
 	 * @since 2020/04/19
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String name()
 	{
 		throw Debugging.todo();
@@ -72,7 +66,6 @@ public class DirectoryClassLibrary
 	 * @since 2021/06/13
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public Path path()
 	{
 		return this.path;
@@ -83,7 +76,6 @@ public class DirectoryClassLibrary
 	 * @since 2020/04/19
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public InputStream resourceAsStream(String __rc)
 		throws IOException, NullPointerException
 	{

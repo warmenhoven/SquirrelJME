@@ -9,7 +9,6 @@
 
 package cc.squirreljme.jvm.suite;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.util.NaturalComparator;
 import cc.squirreljme.runtime.cldc.util.StringUtils;
 import java.lang.ref.Reference;
@@ -21,28 +20,22 @@ import java.util.Objects;
  *
  * @since 2017/02/22
  */
-@SquirrelJMEVendorApi
 public final class SuiteDependency
 	implements Comparable<SuiteDependency>, MarkedDependency
 {
 	/** The dependency type. */
-	@SquirrelJMEVendorApi
 	protected final SuiteDependencyType type;
 	
 	/** The dependency level. */
-	@SquirrelJMEVendorApi
 	protected final SuiteDependencyLevel level;
 	
 	/** The name. */
-	@SquirrelJMEVendorApi
 	protected final SuiteName name;
 	
 	/** The vendor. */
-	@SquirrelJMEVendorApi
 	protected final SuiteVendor vendor;
 	
 	/** The version range. */
-	@SquirrelJMEVendorApi
 	protected final SuiteVersionRange version;
 	
 	/** String representation. */
@@ -56,7 +49,6 @@ public final class SuiteDependency
 	 * @throws NullPointerException On null arguments.
 	 * @since 2017/02/22
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteDependency(String __s)
 		throws InvalidSuiteException, NullPointerException
 	{
@@ -114,7 +106,6 @@ public final class SuiteDependency
 	 * @throws NullPointerException On null arguments.
 	 * @since 2017/11/26
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteDependency(SuiteDependencyType __type,
 		SuiteDependencyLevel __level, String __s)
 		throws InvalidSuiteException, NullPointerException
@@ -169,7 +160,6 @@ public final class SuiteDependency
 	 * @throws NullPointerException If no type and/or name were specified.
 	 * @since 2017/11/26
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteDependency(SuiteDependencyType __type,
 		SuiteDependencyLevel __level, SuiteName __name,
 		SuiteVendor __vendor, SuiteVersionRange __version)
@@ -193,7 +183,6 @@ public final class SuiteDependency
 	 * @since 2017/11/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final int compareTo(SuiteDependency __d)
 		throws NullPointerException
 	{
@@ -232,7 +221,6 @@ public final class SuiteDependency
 	 * @since 2017/02/22
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean equals(Object __o)
 	{
 		if (this == __o)
@@ -256,7 +244,6 @@ public final class SuiteDependency
 	 * @since 2017/02/22
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public int hashCode()
 	{
 		return this.type.hashCode() ^
@@ -271,7 +258,6 @@ public final class SuiteDependency
 	 * @since 2017/11/22
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean isOptional()
 	{
 		return this.level.isOptional();
@@ -283,7 +269,6 @@ public final class SuiteDependency
 	 * @return {@code true} if this is a required dependency.
 	 * @since 2017/11/22
 	 */
-	@SquirrelJMEVendorApi
 	public boolean isRequired()
 	{
 		return this.level.isRequired();
@@ -295,7 +280,6 @@ public final class SuiteDependency
 	 * @return The dependency level.
 	 * @since 2017/02/22
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteDependencyLevel level()
 	{
 		return this.level;
@@ -307,7 +291,6 @@ public final class SuiteDependency
 	 * @return The dependency name, may be {@code null}.
 	 * @since 2017/02/22
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteName name()
 	{
 		return this.name;
@@ -318,7 +301,6 @@ public final class SuiteDependency
 	 * @since 2017/12/31
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean matchesProvided(MarkedProvided __mp)
 		throws NullPointerException
 	{
@@ -436,7 +418,6 @@ public final class SuiteDependency
 	 * @return This dependency but required.
 	 * @since 2017/11/26
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteDependency toRequired()
 	{
 		if (this.isRequired())
@@ -452,7 +433,6 @@ public final class SuiteDependency
 	 * @return This dependency but optional.
 	 * @since 2017/11/26
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteDependency toOptional()
 	{
 		if (this.isOptional())
@@ -466,7 +446,6 @@ public final class SuiteDependency
 	 * @since 2017/02/22
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String toString()
 	{
 		// Get
@@ -499,7 +478,6 @@ public final class SuiteDependency
 	 * @return The dependency type.
 	 * @since 2017/02/22
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteDependencyType type()
 	{
 		return this.type;
@@ -511,7 +489,6 @@ public final class SuiteDependency
 	 * @return The dependency vendor, may be {@code null}.
 	 * @since 2017/02/22
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteVendor vendor()
 	{
 		return this.vendor;
@@ -523,7 +500,6 @@ public final class SuiteDependency
 	 * @return The dependency version, may be {@code null}.
 	 * @since 2017/02/22
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteVersionRange version()
 	{
 		return this.version;

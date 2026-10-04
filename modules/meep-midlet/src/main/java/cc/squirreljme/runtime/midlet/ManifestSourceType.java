@@ -12,7 +12,6 @@ package cc.squirreljme.runtime.midlet;
 import cc.squirreljme.jvm.mle.JarPackageShelf;
 import cc.squirreljme.jvm.mle.RawJarPackageBracketInputStream;
 import cc.squirreljme.jvm.mle.brackets.JarPackageBracket;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -27,11 +26,9 @@ import net.multiphasicapps.collections.UnmodifiableCollection;
  *
  * @since 2022/03/04
  */
-@SquirrelJMEVendorApi
 public enum ManifestSourceType
 {
 	/** JAD Manifest. */
-	@SquirrelJMEVendorApi
 	JAD
 	{
 		/**
@@ -39,7 +36,6 @@ public enum ManifestSourceType
 		 * @since 2022/03/04
 		 */
 		@Override
-		@SquirrelJMEVendorApi
 		public InputStream manifestStream(JarPackageBracket __ourJar)
 			throws IOException, NullPointerException
 		{
@@ -77,7 +73,6 @@ public enum ManifestSourceType
 	},
 	
 	/** KJX Embedded JAD manifest. */
-	@SquirrelJMEVendorApi
 	KJX_EMBEDDED_JAD
 	{
 		/**
@@ -85,7 +80,6 @@ public enum ManifestSourceType
 		 * @since 2022/03/04
 		 */
 		@Override
-		@SquirrelJMEVendorApi
 		public String encoding()
 		{
 			// For some reason, Shift-JIS is used for the manifests instead
@@ -98,7 +92,6 @@ public enum ManifestSourceType
 		 * @since 2022/03/04
 		 */
 		@Override
-		@SquirrelJMEVendorApi
 		public InputStream manifestStream(JarPackageBracket __ourJar)
 			throws IOException, NullPointerException
 		{
@@ -151,7 +144,6 @@ public enum ManifestSourceType
 	},
 	
 	/** JAR Manifest. */
-	@SquirrelJMEVendorApi
 	JAR
 	{
 		/**
@@ -159,7 +151,6 @@ public enum ManifestSourceType
 		 * @since 2022/03/04
 		 */
 		@Override
-		@SquirrelJMEVendorApi
 		public InputStream manifestStream(JarPackageBracket __ourJar)
 			throws IOException, NullPointerException
 		{
@@ -176,12 +167,10 @@ public enum ManifestSourceType
 	;
 	
 	/** The available values. */
-	@SquirrelJMEVendorApi
 	public static final Collection<ManifestSourceType> VALUES =
 		UnmodifiableCollection.of(Arrays.asList(ManifestSourceType.values()));
 	
 	/** The number of available values. */
-	@SquirrelJMEVendorApi
 	public static final int COUNT =
 		ManifestSourceType.VALUES.size();
 	
@@ -195,7 +184,6 @@ public enum ManifestSourceType
 	 * @throws NullPointerException On null arguments.
 	 * @since 2022/03/04
 	 */
-	@SquirrelJMEVendorApi
 	public abstract InputStream manifestStream(JarPackageBracket __ourJar)
 		throws IOException, NullPointerException;
 	
@@ -205,7 +193,6 @@ public enum ManifestSourceType
 	 * @return The encoding to use for the manifest.
 	 * @since 2022/03/04
 	 */
-	@SquirrelJMEVendorApi
 	public String encoding()
 	{
 		return "utf-8";

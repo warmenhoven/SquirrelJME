@@ -16,17 +16,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * When compacting the SquirrelJME runtime, force this class to be kept, this
- * is intended for when an interface is not meant to be public in any way
- * however it is needed in another library within SquirrelJME.
+ * This indicates SquirrelJME Native API and its minimum version.
  *
- * @since 2026/06/03
+ * @since 2018/12/05
  */
 @Documented
 @Retention(value=RetentionPolicy.RUNTIME)
 @Target(value={ElementType.CONSTRUCTOR, ElementType.FIELD,
-	ElementType.METHOD, ElementType.TYPE})
-public @interface KeepWhenCompacting
+	ElementType.LOCAL_VARIABLE, ElementType.METHOD, ElementType.PACKAGE,
+	ElementType.PARAMETER, ElementType.TYPE})
+public @interface SquirrelJMENativeApi
 {
+	/** @return The minimum API version. */
+	String min();
 }
 

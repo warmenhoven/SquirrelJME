@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 
 /**
@@ -17,7 +16,6 @@ import cc.squirreljme.runtime.cldc.debug.Debugging;
  *
  * @since 2019/05/06
  */
-@SquirrelJMEVendorApi
 public final class FileAddress
 	implements SocketAddress
 {
@@ -32,7 +30,6 @@ public final class FileAddress
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/06
 	 */
-	@SquirrelJMEVendorApi
 	public FileAddress(String __p)
 		throws IllegalArgumentException, NullPointerException
 	{
@@ -48,7 +45,6 @@ public final class FileAddress
 	 * @since 2019/05/13
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final String toString()
 	{
 		return this.file;
@@ -63,7 +59,6 @@ public final class FileAddress
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/06
 	 */
-	@SquirrelJMEVendorApi
 	public static final String stringDecode(String __p)
 		throws IllegalArgumentException, NullPointerException
 	{
@@ -121,7 +116,6 @@ public final class FileAddress
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/06
 	 */
-	@SquirrelJMEVendorApi
 	public static FileAddress of(String __p)
 		throws IllegalArgumentException, NullPointerException
 	{

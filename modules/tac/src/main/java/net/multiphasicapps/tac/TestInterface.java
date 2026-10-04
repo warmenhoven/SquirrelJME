@@ -9,9 +9,6 @@
 
 package net.multiphasicapps.tac;
 
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
-
 /**
  * This is an interface for anything which is something that can be tested
  * within the SquirrelJME test framework.
@@ -28,6 +25,5 @@ public interface TestInterface
 	 * @return The execution result of the test.
 	 * @since 2020/02/23
 	 */
-	@SquirrelJMEVendorApi
 	TestExecution runExecution(String... __mainargs);
 }

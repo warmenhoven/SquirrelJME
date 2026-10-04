@@ -13,7 +13,6 @@ import cc.squirreljme.jvm.mle.brackets.JarPackageBracket;
 import cc.squirreljme.jvm.suite.DependencyInfo;
 import cc.squirreljme.jvm.suite.ProvidedInfo;
 import cc.squirreljme.jvm.suite.SuiteInfo;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 
 /**
  * This represents a library that can be used as a dependency, this includes
@@ -21,15 +20,12 @@ import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
  *
  * @since 2020/12/28
  */
-@SquirrelJMEVendorApi
 public final class Library
 {
 	/** The library information. */
-	@SquirrelJMEVendorApi
 	protected final SuiteInfo info;
 	
 	/** The JAR which contains the library. */
-	@SquirrelJMEVendorApi
 	protected final JarPackageBracket jar;
 	
 	/** Dependencies. */
@@ -62,7 +58,6 @@ public final class Library
 	 * @return Dependencies.
 	 * @since 2021/01/03
 	 */
-	@SquirrelJMEVendorApi
 	protected DependencyInfo dependencies()
 	{
 		DependencyInfo rv = this._dependencies;
@@ -77,7 +72,6 @@ public final class Library
 	 * @return Provided dependencies.
 	 * @since 2021/01/03
 	 */
-	@SquirrelJMEVendorApi
 	protected ProvidedInfo provided()
 	{
 		ProvidedInfo rv = this._provided;
@@ -91,7 +85,6 @@ public final class Library
 	 * @since 2022/02/03
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String toString()
 	{
 		return this.info.suite().toString();

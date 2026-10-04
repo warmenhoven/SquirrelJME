@@ -9,8 +9,6 @@
 
 package cc.squirreljme.runtime.gcf.file;
 
-import cc.squirreljme.runtime.cldc.annotation.KeepWhenCompacting;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import cc.squirreljme.runtime.cldc.util.IteratorToEnumeration;
 import cc.squirreljme.runtime.gcf.AbstractStreamConnection;
@@ -28,7 +26,6 @@ import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
-import javax.microedition.io.Connection;
 import javax.microedition.io.ConnectionNotFoundException;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.ConnectionClosedException;
@@ -37,6 +34,7 @@ import javax.microedition.io.file.IllegalModeException;
 import net.multiphasicapps.collections.UnmodifiableArrayList;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
+
 import static cc.squirreljme.runtime.cldc.debug.ErrorCode.__error__;
 
 /**
@@ -44,7 +42,6 @@ import static cc.squirreljme.runtime.cldc.debug.ErrorCode.__error__;
  *
  * @since 2025/12/26
  */
-@SquirrelJMEVendorApi
 public final class FileEndPointConnection
 	extends AbstractStreamConnection
 	implements FileConnection
@@ -76,7 +73,6 @@ public final class FileEndPointConnection
 	 * @throws NullPointerException On null arguments.
 	 * @since 2025/12/27
 	 */
-	@SquirrelJMEVendorApi
 	public FileEndPointConnection(
 		@MagicConstant(flagsFromClass = Connector.class) int __mode)
 		throws IllegalArgumentException, NullPointerException
@@ -89,7 +85,6 @@ public final class FileEndPointConnection
 	 * @since 2025/12/27
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final long availableSize()
 		throws ConnectionClosedException, IllegalModeException,
 			SecurityException
@@ -114,7 +109,6 @@ public final class FileEndPointConnection
 	 * @since 2025/12/27
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected final void becomingClosed()
 		throws IOException
 	{
@@ -128,21 +122,18 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final boolean canRead()
 	{
 		throw Debugging.todo();
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final boolean canWrite()
 	{
 		throw Debugging.todo();
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final void create()
 		throws IOException
 	{
@@ -150,7 +141,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final void delete()
 		throws IOException
 	{
@@ -158,7 +148,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final long directorySize(boolean __a)
 		throws IOException
 	{
@@ -166,14 +155,12 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final boolean exists()
 	{
 		throw Debugging.todo();
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final long fileSize()
 		throws IOException
 	{
@@ -181,7 +168,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final String getName()
 	{
 		throw Debugging.todo();
@@ -192,7 +178,6 @@ public final class FileEndPointConnection
 	 * @since 2026/01/01
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final String getPath()
 	{
 		synchronized (this)
@@ -212,7 +197,6 @@ public final class FileEndPointConnection
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final String getURL()
 	{
 		synchronized (this)
@@ -229,7 +213,6 @@ public final class FileEndPointConnection
 	 * @since 2025/12/27
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final boolean isDirectory()
 		throws ConnectionClosedException, IllegalModeException,
 			SecurityException
@@ -243,21 +226,18 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final boolean isHidden()
 	{
 		throw Debugging.todo();
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final boolean isOpen()
 	{
 		throw Debugging.todo();
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final long lastModified()
 	{
 		throw Debugging.todo();
@@ -268,7 +248,6 @@ public final class FileEndPointConnection
 	 * @since 2025/12/27
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final Enumeration list()
 		throws ConnectionClosedException, IllegalModeException, IOException,
 			SecurityException
@@ -281,7 +260,6 @@ public final class FileEndPointConnection
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final Enumeration list(@NotNull String __filter,
 		boolean __includeHidden)
 		throws ConnectionClosedException, IllegalModeException, IOException,
@@ -316,7 +294,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final void mkdir()
 		throws IOException
 	{
@@ -328,7 +305,6 @@ public final class FileEndPointConnection
 	 * @since 2026/01/01
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final InputStream openInputStream()
 		throws IllegalModeException, IOException
 	{
@@ -351,7 +327,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final OutputStream openOutputStream(long __a)
 		throws IOException
 	{
@@ -359,7 +334,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final OutputStream openOutputStream()
 		throws IOException
 	{
@@ -367,7 +341,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final void rename(String __a)
 		throws IOException
 	{
@@ -379,7 +352,6 @@ public final class FileEndPointConnection
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final void setFileConnection(String __fileName)
 		throws ConnectionClosedException, IllegalArgumentException,
 			IOException, NullPointerException, SecurityException
@@ -432,7 +404,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final void setHidden(boolean __a)
 		throws IOException
 	{
@@ -440,7 +411,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final void setReadable(boolean __a)
 		throws IOException
 	{
@@ -448,7 +418,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final void setWritable(boolean __a)
 		throws IOException
 	{
@@ -456,14 +425,12 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final long totalSize()
 	{
 		throw Debugging.todo();
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final void truncate(long __a)
 		throws IOException
 	{
@@ -471,7 +438,6 @@ public final class FileEndPointConnection
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public final long usedSize()
 	{
 		throw Debugging.todo();
@@ -488,7 +454,6 @@ public final class FileEndPointConnection
 	 * @since 2025/12/28
 	 */
 	@SuppressWarnings("resource")
-	@KeepWhenCompacting
 	FileEndPointConnection __changeEndPoint(UriGenericPart __part,
 		UriGenericPart __dotDot)
 		throws ConnectionNotFoundException, IOException, SecurityException

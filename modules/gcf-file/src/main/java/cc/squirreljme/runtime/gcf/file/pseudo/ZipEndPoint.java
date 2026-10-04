@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf.file.pseudo;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import cc.squirreljme.runtime.cldc.full.attrib.ExtraFileAttributes;
 import cc.squirreljme.runtime.gcf.file.FileEndPoint;
@@ -27,17 +26,14 @@ import org.jetbrains.annotations.Nullable;
  *
  * @since 2025/12/30
  */
-@SquirrelJMEVendorApi
 public class ZipEndPoint
 	extends FileEndPoint
 {
 	/** Decoded host. */
-	@SquirrelJMEVendorApi
 	public static final String DECODED_HOST =
 		"!?x-squirreljme-zip://?!";
 	
 	/** Host. */
-	@SquirrelJMEVendorApi
 	public static final String HOST =
 		"!%3Fx-squirreljme-zip%3A%2F%2F%3F!";
 	
@@ -50,7 +46,6 @@ public class ZipEndPoint
 	 * @throws NullPointerException On null arguments.
 	 * @since 2025/12/27
 	 */
-	@SquirrelJMEVendorApi
 	protected ZipEndPoint(@NotNull UriGenericPart __part, int __mode,
 		@Nullable UriGenericPart __dotDot)
 		throws NullPointerException
@@ -65,7 +60,6 @@ public class ZipEndPoint
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected final ExtraFileAttributes attachedAttributes()
 		throws SecurityException
 	{
@@ -80,7 +74,6 @@ public class ZipEndPoint
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected FileStore attachedFileStore()
 		throws SecurityException
 	{
@@ -93,7 +86,6 @@ public class ZipEndPoint
 	 * @since 2025/12/27
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected FileSystem attachedFileSystem()
 		throws SecurityException
 	{
@@ -102,7 +94,6 @@ public class ZipEndPoint
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	public void close()
 		throws IOException
 	{
@@ -110,7 +101,6 @@ public class ZipEndPoint
 	}
 	
 	@Override
-	@SquirrelJMEVendorApi
 	protected void listDirectory(@NotNull Map<String, UriGenericPart> __into)
 		throws IOException, NullPointerException, SecurityException
 	{
@@ -122,7 +112,6 @@ public class ZipEndPoint
 	 * @since 2026/01/01
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected InputStream openInputStream()
 		throws IOException, SecurityException
 	{

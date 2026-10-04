@@ -17,8 +17,6 @@ import cc.squirreljme.jvm.suite.EntryPoints;
 import cc.squirreljme.jvm.suite.InvalidSuiteException;
 import cc.squirreljme.jvm.suite.SuiteInfo;
 import cc.squirreljme.jvm.suite.SuiteUtils;
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +31,6 @@ import java.util.Map;
 public enum ApplicationParser
 {
 	/** Java Applications. */
-	@SquirrelJMEVendorApi
 	JAVA
 	{
 		/**
@@ -57,7 +54,7 @@ public enum ApplicationParser
 				// If no manifest exists, might not be a JAR
 				if (rc == null)
 				{
-					if (Debugging.VERBOSE)
+					if (Debugging.verbose())
 						Debugging.debugNote(
 							"No META-INF/MANIFEST.MF in %s...",
 							__state.libraryPath());
@@ -72,7 +69,7 @@ public enum ApplicationParser
 			// Prevent bad JARs and files from messing things up
 			catch (IOException | InvalidSuiteException | MLECallError e)
 			{
-				if (Debugging.VERBOSE)
+				if (Debugging.verbose())
 					e.printStackTrace();
 				return false;
 			}
@@ -111,7 +108,6 @@ public enum ApplicationParser
 	},
 	
 	/** I-mode/i-appli. */
-	@SquirrelJMEVendorApi
 	I_MODE
 	{
 		/**
@@ -135,7 +131,7 @@ public enum ApplicationParser
 			// If there is no JAM file, this cannot be an i-mode application
 			if (jam == null)
 			{
-				if (Debugging.VERBOSE)
+				if (Debugging.verbose())
 					Debugging.debugNote("No JAM found for %s.",
 						jarName);
 				return false;
@@ -162,7 +158,7 @@ public enum ApplicationParser
 			}
 			catch (IOException e)
 			{
-				if (Debugging.VERBOSE)
+				if (Debugging.verbose())
 					e.printStackTrace();
 				return false;
 			}
@@ -185,7 +181,7 @@ public enum ApplicationParser
 			}
 			catch (InvalidSuiteException e)
 			{
-				if (Debugging.VERBOSE)
+				if (Debugging.verbose())
 					e.printStackTrace();
 			}
 			
@@ -195,7 +191,6 @@ public enum ApplicationParser
 	},
 	
 	/** I-Mode JV-Lite 2. */
-	@SquirrelJMEVendorApi
 	I_MODE_JV_LITE2
 	{
 		/**
@@ -219,7 +214,7 @@ public enum ApplicationParser
 			// If there is no ADF file, this cannot be an i-mode application
 			if (binaryAdf == null)
 			{
-				if (Debugging.VERBOSE)
+				if (Debugging.verbose())
 					Debugging.debugNote("No Binary ADF found for %s.",
 						jarName);
 				return false;
@@ -239,7 +234,7 @@ public enum ApplicationParser
 			}
 			catch (IOException e)
 			{
-				if (Debugging.VERBOSE)
+				if (Debugging.verbose())
 					e.printStackTrace();
 				return false;
 			}
@@ -272,7 +267,7 @@ public enum ApplicationParser
 			}
 			catch (InvalidSuiteException e)
 			{
-				if (Debugging.VERBOSE)
+				if (Debugging.verbose())
 					e.printStackTrace();
 			}
 			
@@ -285,7 +280,6 @@ public enum ApplicationParser
 	;
 	
 	/** Data resource name. */
-	@SquirrelJMEVendorApi
 	public static final String DATA_RESOURCE =
 		"$DATA$";
 	
@@ -297,7 +291,6 @@ public enum ApplicationParser
 	 * @throws NullPointerException On null arguments.
 	 * @since 2024/01/06
 	 */
-	@SquirrelJMEVendorApi
 	protected abstract boolean parse(ApplicationParserState __state)
 		throws NullPointerException;
 	

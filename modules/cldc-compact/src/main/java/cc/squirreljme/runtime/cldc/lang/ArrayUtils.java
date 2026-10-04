@@ -10,7 +10,6 @@
 package cc.squirreljme.runtime.cldc.lang;
 
 import cc.squirreljme.jvm.mle.ObjectShelf;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.util.IntegerArray;
 import cc.squirreljme.runtime.cldc.util.IntegerIntegerArray;
 import java.util.ArrayList;
@@ -23,61 +22,49 @@ import java.util.List;
  *
  * @since 2018/11/03
  */
-@SquirrelJMEVendorApi
 public final class ArrayUtils
 {
 	/** Boolean array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_BOOLEAN =
 		1;
 		
 	/** The first array type. */
-	@SquirrelJMEVendorApi
 	public static final byte FIRST_TYPE =
 		ArrayUtils.ARRAY_BOOLEAN;
 	
 	/** Byte array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_BYTE =
 		2;
 	
 	/** Short array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_SHORT =
 		3;
 	
 	/** Character array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_CHARACTER =
 		4;
 	
 	/** Integer array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_INTEGER =
 		5;
 	
 	/** Long array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_LONG =
 		6;
 	
 	/** Float array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_FLOAT =
 		7;
 	
 	/** Double array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_DOUBLE =
 		8;
 	
 	/** Object array. */
-	@SquirrelJMEVendorApi
 	public static final byte ARRAY_OBJECT =
 		9;
 	
 	/** The number of array types. */
-	@SquirrelJMEVendorApi
 	public static final byte NUM_ARRAY_TYPES =
 		10;
 	
@@ -98,7 +85,6 @@ public final class ArrayUtils
 	 * @return If the arrays are equal.
 	 * @since 2020/11/15
 	 */
-	@SquirrelJMEVendorApi
 	public static boolean arrayEquals(Object __a, Object __b)
 	{
 		// Same exact array reference?
@@ -155,7 +141,6 @@ public final class ArrayUtils
 	 * @throws IndexOutOfBoundsException If the array length is negative.
 	 * @since 2021/12/27
 	 */
-	@SquirrelJMEVendorApi
 	public static <T> T arrayNew(Class<T> __class, int __type, int __len)
 		throws ClassCastException, IllegalArgumentException,
 			IndexOutOfBoundsException
@@ -211,7 +196,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2022/01/05
 	 */
-	@SquirrelJMEVendorApi
 	public static <T> T arrayGet(Class<T> __cast,
 		int __type, Object __a, int __dx)
 		throws ArrayIndexOutOfBoundsException, ClassCastException,
@@ -268,7 +252,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2018/12/13
 	 */
-	@SquirrelJMEVendorApi
 	public static void arraySet(Object __a, int __dx, Object __v)
 		throws ArrayIndexOutOfBoundsException, ClassCastException,
 			IllegalArgumentException, NullPointerException
@@ -289,7 +272,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2018/12/13
 	 */
-	@SquirrelJMEVendorApi
 	public static void arraySet(int __type, Object __a, int __dx,
 		Object __v)
 		throws ArrayIndexOutOfBoundsException, ClassCastException,
@@ -352,7 +334,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2018/12/13
 	 */
-	@SquirrelJMEVendorApi
 	public static int arrayType(Object __a)
 		throws IllegalArgumentException, NullPointerException
 	{
@@ -390,7 +371,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/08/09
 	 */
-	@SquirrelJMEVendorApi
 	public static int[] flatten(IntegerArray... __arrays)
 		throws NullPointerException
 	{
@@ -408,7 +388,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/08/09
 	 */
-	@SquirrelJMEVendorApi
 	public static int[] flatten(List<IntegerArray> __arrays)
 		throws NullPointerException
 	{
@@ -467,7 +446,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/08/09
 	 */
-	@SquirrelJMEVendorApi
 	public static int[] flattenPrimitive(int[]... __arrays)
 		throws NullPointerException
 	{
@@ -497,7 +475,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/08/09
 	 */
-	@SquirrelJMEVendorApi
 	public static int[] flattenPrimitive(List<int[]> __arrays)
 		throws NullPointerException
 	{
@@ -532,7 +509,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a)
 		throws NegativeArraySizeException, NullPointerException
@@ -555,7 +531,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b)
 		throws NegativeArraySizeException, NullPointerException
@@ -579,7 +554,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b, int __c)
 		throws NegativeArraySizeException, NullPointerException
@@ -604,7 +578,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b, int __c, int __d)
 		throws NegativeArraySizeException, NullPointerException
@@ -630,7 +603,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b, int __c, int __d, int __e)
 		throws NegativeArraySizeException, NullPointerException
@@ -657,7 +629,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b, int __c, int __d, int __e, int __f)
 		throws NegativeArraySizeException, NullPointerException
@@ -685,7 +656,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b, int __c, int __d, int __e, int __f, int __g)
 		throws NegativeArraySizeException, NullPointerException
@@ -714,7 +684,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b, int __c, int __d, int __e, int __f, int __g,
 		int __h)
@@ -745,7 +714,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b, int __c, int __d, int __e, int __f, int __g,
 		int __h, int __i)
@@ -777,7 +745,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/04
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int __a, int __b, int __c, int __d, int __e, int __f, int __g,
 		int __h, int __i, int __j)
@@ -800,7 +767,6 @@ public final class ArrayUtils
 	 * @throws NullPointerException On null arguments.
 	 * @since 2018/11/03
 	 */
-	@SquirrelJMEVendorApi
 	public static Object multiANewArray(Class<?> __type, int __skip,
 		int[] __dims)
 		throws NegativeArraySizeException, NullPointerException

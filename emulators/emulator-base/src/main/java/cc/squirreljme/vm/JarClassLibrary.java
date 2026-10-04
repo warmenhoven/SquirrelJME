@@ -10,8 +10,6 @@
 package cc.squirreljme.vm;
 
 import cc.squirreljme.jvm.suite.SuiteUtils;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
-import cc.squirreljme.runtime.cldc.debug.Debugging;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -24,12 +22,10 @@ import net.multiphasicapps.zip.streamreader.ZipStreamReader;
  *
  * @since 2020/04/19
  */
-@SquirrelJMEVendorApi
 public class JarClassLibrary
 	implements RawVMClassLibrary
 {
 	/** The path of the library. */
-	@SquirrelJMEVendorApi
 	protected final Path path;
 	
 	/** The base class library as loaded into memory. */
@@ -42,7 +38,6 @@ public class JarClassLibrary
 	 * @throws NullPointerException On null arguments.
 	 * @since 2020/04/19
 	 */
-	@SquirrelJMEVendorApi
 	public JarClassLibrary(Path __path)
 		throws NullPointerException
 	{
@@ -57,7 +52,6 @@ public class JarClassLibrary
 	 * @since 2020/04/19
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String[] listResources()
 	{
 		try
@@ -76,7 +70,6 @@ public class JarClassLibrary
 	 * @since 2020/04/19
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String name()
 	{
 		return this.path.getFileName().toString();
@@ -86,7 +79,6 @@ public class JarClassLibrary
 	 * {@inheritDoc}
 	 * @since 2021/06/13
 	 */
-	@SquirrelJMEVendorApi
 	@Override
 	public Path path()
 	{
@@ -98,7 +90,6 @@ public class JarClassLibrary
 	 * @since 2023/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public void rawData(int __jarOffset, byte[] __b, int __o, int __l)
 		throws IndexOutOfBoundsException, NullPointerException
 	{
@@ -137,7 +128,6 @@ public class JarClassLibrary
 	 * @since 2023/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public int rawSize()
 	{
 		try
@@ -155,7 +145,6 @@ public class JarClassLibrary
 	 * @since 2020/04/19
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public InputStream resourceAsStream(String __rc)
 		throws IOException, NullPointerException
 	{
@@ -167,7 +156,6 @@ public class JarClassLibrary
 	 * @since 2021/06/13
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final String toString()
 	{
 		return this.path.toString();
@@ -207,7 +195,6 @@ public class JarClassLibrary
 	 * @throws NullPointerException On null arguments.
 	 * @since 2021/06/13
 	 */
-	@SquirrelJMEVendorApi
 	public static boolean isJar(Path __s)
 		throws NullPointerException
 	{
@@ -226,7 +213,6 @@ public class JarClassLibrary
 	 * @since 2021/06/13
 	 */
 	@Deprecated
-	@SquirrelJMEVendorApi
 	public static boolean isJar(String __s)
 		throws NullPointerException
 	{
@@ -243,7 +229,6 @@ public class JarClassLibrary
 	 * @throws NullPointerException On null arguments.
 	 * @since 2020/04/19
 	 */
-	@SquirrelJMEVendorApi
 	public static VMClassLibrary of(Path __path)
 		throws NullPointerException
 	{

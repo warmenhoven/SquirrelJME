@@ -9,8 +9,6 @@
 
 package cc.squirreljme.csv;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
-import cc.squirreljme.runtime.cldc.debug.Debugging;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
@@ -21,16 +19,13 @@ import java.util.Arrays;
  * @param <T> The type to write.
  * @since 2023/09/12
  */
-@SquirrelJMEVendorApi
 public final class CsvWriter<T>
 	implements Closeable
 {
 	/** The serializer used. */
-	@SquirrelJMEVendorApi
 	protected final CsvSerializer<T> serializer;
 	
 	/** The output target. */
-	@SquirrelJMEVendorApi
 	protected final Appendable out;
 	
 	/** The working buffer. */
@@ -52,7 +47,6 @@ public final class CsvWriter<T>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/09/12
 	 */
-	@SquirrelJMEVendorApi
 	public CsvWriter(CsvSerializer<T> __serializer, Appendable __out)
 		throws NullPointerException
 	{
@@ -71,7 +65,6 @@ public final class CsvWriter<T>
 	 * @since 2023/09/12
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public void close()
 		throws IOException
 	{
@@ -125,7 +118,6 @@ public final class CsvWriter<T>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/09/12
 	 */
-	@SquirrelJMEVendorApi
 	public void write(T __value)
 		throws IOException, NullPointerException
 	{
@@ -171,7 +163,6 @@ public final class CsvWriter<T>
 	 * @since 2023/09/12
 	 */
 	@SuppressWarnings("unchecked")
-	@SquirrelJMEVendorApi
 	public void writeAll(T... __values)
 		throws IOException, NullPointerException
 	{
@@ -189,7 +180,6 @@ public final class CsvWriter<T>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/09/12
 	 */
-	@SquirrelJMEVendorApi
 	public void writeAll(Iterable<? extends T> __values)
 		throws IOException, NullPointerException
 	{

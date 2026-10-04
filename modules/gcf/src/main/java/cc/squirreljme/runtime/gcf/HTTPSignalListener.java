@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.io.IOException;
 
 /**
@@ -18,7 +17,6 @@ import java.io.IOException;
  *
  * @since 2019/05/13
  */
-@SquirrelJMEVendorApi
 public interface HTTPSignalListener
 {
 	/**
@@ -29,7 +27,6 @@ public interface HTTPSignalListener
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/13
 	 */
-	@SquirrelJMEVendorApi
 	void requestReady(byte[] __data)
 		throws IOException, NullPointerException;
 }

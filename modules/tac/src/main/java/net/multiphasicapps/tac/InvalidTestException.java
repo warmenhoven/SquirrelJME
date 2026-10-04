@@ -9,9 +9,6 @@
 
 package net.multiphasicapps.tac;
 
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
-
 /**
  * This is thrown when a test is not valid.
  *
@@ -25,7 +22,6 @@ public class InvalidTestException
 	 *
 	 * @since 2018/10/06
 	 */
-	@SquirrelJMEVendorApi
 	public InvalidTestException()
 	{
 	}
@@ -36,7 +32,6 @@ public class InvalidTestException
 	 * @param __m The message.
 	 * @since 2018/10/06
 	 */
-	@SquirrelJMEVendorApi
 	public InvalidTestException(String __m)
 	{
 		super(__m);
@@ -49,7 +44,6 @@ public class InvalidTestException
 	 * @param __c The cause.
 	 * @since 2018/10/06
 	 */
-	@SquirrelJMEVendorApi
 	public InvalidTestException(String __m, Throwable __c)
 	{
 		super(__m, __c);
@@ -61,7 +55,6 @@ public class InvalidTestException
 	 * @param __c The cause.
 	 * @since 2018/10/06
 	 */
-	@SquirrelJMEVendorApi
 	public InvalidTestException(Throwable __c)
 	{
 		super(__c);

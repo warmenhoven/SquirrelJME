@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,11 +20,9 @@ import java.io.InputStream;
  *
  * @since 2019/05/13
  */
-@SquirrelJMEVendorApi
 public final class HTTPResponse
 {
 	/** The header. */
-	@SquirrelJMEVendorApi
 	public final HTTPResponseHeader header;
 	
 	/** The data bytes. */
@@ -39,7 +36,6 @@ public final class HTTPResponse
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/13
 	 */
-	@SquirrelJMEVendorApi
 	public HTTPResponse(HTTPResponseHeader __h, byte[] __d)
 		throws NullPointerException
 	{
@@ -56,7 +52,6 @@ public final class HTTPResponse
 	 * @return The input stream for the body.
 	 * @since 2019/05/13
 	 */
-	@SquirrelJMEVendorApi
 	public final InputStream inputStream()
 	{
 		return new ByteArrayInputStream(this._data);
@@ -71,7 +66,6 @@ public final class HTTPResponse
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/13
 	 */
-	@SquirrelJMEVendorApi
 	public static final HTTPResponse parse(byte[] __b)
 		throws IOException, NullPointerException
 	{
@@ -90,7 +84,6 @@ public final class HTTPResponse
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/13
 	 */
-	@SquirrelJMEVendorApi
 	public static final HTTPResponse parse(InputStream __in)
 		throws IOException, NullPointerException
 	{

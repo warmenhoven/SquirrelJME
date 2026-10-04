@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf.file;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,7 +21,6 @@ import java.util.NoSuchElementException;
  *
  * @since 2025/12/28
  */
-@SquirrelJMEVendorApi
 public final class BasicGlobFilter
 	implements Iterator<String>
 {
@@ -43,7 +41,6 @@ public final class BasicGlobFilter
 	 * @throws NullPointerException On null arguments.
 	 * @since 2025/12/28
 	 */
-	@SquirrelJMEVendorApi
 	public BasicGlobFilter(String __filter, Iterator<String> __iterator)
 		throws NullPointerException
 	{
@@ -105,7 +102,6 @@ public final class BasicGlobFilter
 	 * @since 2025/12/28
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public void remove()
 	{
 		throw new UnsupportedOperationException("RORO");
@@ -116,7 +112,6 @@ public final class BasicGlobFilter
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String next()
 		throws NoSuchElementException
 	{
@@ -135,7 +130,6 @@ public final class BasicGlobFilter
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean hasNext()
 	{
 		// If there is already a queued item, do nothing
@@ -186,7 +180,7 @@ public final class BasicGlobFilter
 			throw new NullPointerException("NARG");
 		
 		// Debug
-		if (Debugging.VERBOSE)
+		if (Debugging.verbose())
 			Debugging.debugNote("%s ?~= %s", Arrays.asList(this._order),
 				__maybe);
 		

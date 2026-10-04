@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf.file.pseudo;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.gcf.file.FileEndPoint;
 import cc.squirreljme.runtime.gcf.file.FileEndPointFactory;
 import cc.squirreljme.runtime.gcf.uri.UriAuthority;
@@ -18,14 +17,12 @@ import java.io.IOException;
 import javax.microedition.io.ConnectionNotFoundException;
 import javax.microedition.io.Connector;
 import org.intellij.lang.annotations.MagicConstant;
-import static cc.squirreljme.runtime.cldc.debug.ErrorCode.__error__;
 
 /**
  * Provides access to {@link AllVolumesEndPoint}.
  *
  * @since 2025/12/27
  */
-@SquirrelJMEVendorApi
 public class AllVolumesEndPointFactory
 	implements FileEndPointFactory
 {
@@ -34,7 +31,6 @@ public class AllVolumesEndPointFactory
 	 * @since 2025/12/29
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public FileEndPoint connect(UriGenericPart __uri,
 		@MagicConstant(flagsFromClass = Connector.class) int __mode,
 		UriGenericPart __dotDot)
@@ -51,7 +47,6 @@ public class AllVolumesEndPointFactory
 	 * @since 2025/12/29
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean handleAuthority(UriAuthority __auth)
 		throws NullPointerException
 	{

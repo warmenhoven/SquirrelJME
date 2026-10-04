@@ -9,15 +9,12 @@
 
 package cc.squirreljme.csv;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
-
 /**
  * Serializes input and output code.
  *
  * @param <T> The type to serialize to.
  * @since 2023/09/12
  */
-@SquirrelJMEVendorApi
 public interface CsvSerializer<T>
 {
 	/**
@@ -28,7 +25,6 @@ public interface CsvSerializer<T>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/09/12
 	 */
-	@SquirrelJMEVendorApi
 	void serialize(T __input, CsvSerializerResult __result)
 		throws NullPointerException;
 	
@@ -39,7 +35,6 @@ public interface CsvSerializer<T>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/09/12
 	 */
-	@SquirrelJMEVendorApi
 	void serializeHeaders(CsvSerializerResult __result)
 		throws NullPointerException;
 }

@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf.file.pseudo;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import cc.squirreljme.runtime.gcf.file.FileEndPoint;
 import cc.squirreljme.runtime.gcf.file.FileEndPointFactory;
@@ -17,6 +16,7 @@ import cc.squirreljme.runtime.gcf.uri.UriAuthority;
 import cc.squirreljme.runtime.gcf.uri.UriGenericPart;
 import java.io.IOException;
 import javax.microedition.io.ConnectionNotFoundException;
+
 import static cc.squirreljme.runtime.cldc.debug.ErrorCode.__error__;
 
 /**
@@ -24,7 +24,6 @@ import static cc.squirreljme.runtime.cldc.debug.ErrorCode.__error__;
  *
  * @since 2025/12/30
  */
-@SquirrelJMEVendorApi
 public class ZipEndPointFactory
 	implements FileEndPointFactory
 {
@@ -33,7 +32,6 @@ public class ZipEndPointFactory
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public FileEndPoint connect(UriGenericPart __uri, int __mode,
 		UriGenericPart __dotDot)
 		throws ConnectionNotFoundException, IOException, NullPointerException
@@ -64,7 +62,6 @@ public class ZipEndPointFactory
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean handleAuthority(UriAuthority __auth)
 		throws NullPointerException
 	{

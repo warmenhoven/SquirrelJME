@@ -9,7 +9,6 @@
 
 package cc.squirreljme.runtime.gcf;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -19,16 +18,13 @@ import java.io.InputStream;
  *
  * @since 2019/05/13
  */
-@SquirrelJMEVendorApi
 public final class TrackedInputStream
 	extends InputStream
 {
 	/** The tracker used. */
-	@SquirrelJMEVendorApi
 	protected final ConnectionStateTracker tracker;
 	
 	/** The wrapped stream. */
-	@SquirrelJMEVendorApi
 	protected final InputStream in;
 	
 	/**
@@ -39,7 +35,6 @@ public final class TrackedInputStream
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/13
 	 */
-	@SquirrelJMEVendorApi
 	public TrackedInputStream(ConnectionStateTracker __t, InputStream __in)
 		throws NullPointerException
 	{
@@ -55,7 +50,6 @@ public final class TrackedInputStream
 	 * @since 2019/05/13
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final int available()
 		throws IOException
 	{
@@ -71,7 +65,6 @@ public final class TrackedInputStream
 	 * @since 2019/05/13
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final void close()
 		throws IOException
 	{
@@ -87,7 +80,6 @@ public final class TrackedInputStream
 	 * @since 2019/05/13
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final int read()
 		throws IOException
 	{
@@ -107,7 +99,6 @@ public final class TrackedInputStream
 	 * @since 2019/05/13
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final int read(byte[] __b)
 		throws IOException
 	{
@@ -127,7 +118,6 @@ public final class TrackedInputStream
 	 * @since 2019/05/13
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final int read(byte[] __b, int __o, int __l)
 		throws IOException
 	{

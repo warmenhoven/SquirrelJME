@@ -13,7 +13,6 @@ import cc.squirreljme.jvm.manifest.JavaManifest;
 import cc.squirreljme.jvm.manifest.JavaManifestAttributes;
 import cc.squirreljme.jvm.manifest.JavaManifestException;
 import cc.squirreljme.jvm.manifest.JavaManifestKey;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,7 +32,6 @@ import java.util.Set;
  *
  * @since 2016/09/19
  */
-@SquirrelJMEVendorApi
 public class MutableJavaManifest
 	extends AbstractMap<String, MutableJavaManifestAttributes>
 {
@@ -42,7 +40,6 @@ public class MutableJavaManifest
 		71;
 	
 	/** Main attributes. */
-	@SquirrelJMEVendorApi
 	protected final Map<String, MutableJavaManifestAttributes> attributes =
 		new LinkedHashMap<>();
 	
@@ -51,7 +48,6 @@ public class MutableJavaManifest
 	 *
 	 * @since 2016/09/19
 	 */
-	@SquirrelJMEVendorApi
 	public MutableJavaManifest()
 	{
 		// Always add a main attribute
@@ -66,7 +62,6 @@ public class MutableJavaManifest
 	 * @throws NullPointerException On null arguments.
 	 * @since 2016/12/26
 	 */
-	@SquirrelJMEVendorApi
 	public MutableJavaManifest(JavaManifest __man)
 		throws NullPointerException
 	{
@@ -101,7 +96,6 @@ public class MutableJavaManifest
 	 * @throws NullPointerException On null arguments.
 	 * @since 2016/12/26
 	 */
-	@SquirrelJMEVendorApi
 	public MutableJavaManifest(MutableJavaManifest __man)
 		throws NullPointerException
 	{
@@ -135,7 +129,6 @@ public class MutableJavaManifest
 	 * @throws RuntimeException If the manifest could not be built.
 	 * @since 2017/11/17
 	 */
-	@SquirrelJMEVendorApi
 	public final JavaManifest build()
 		throws RuntimeException
 	{
@@ -171,7 +164,6 @@ public class MutableJavaManifest
 	 * @since 2016/09/19
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final Set<Map.Entry<String, MutableJavaManifestAttributes>>
 		entrySet()
 	{
@@ -184,7 +176,6 @@ public class MutableJavaManifest
 	 * @return The main attribute mapping.
 	 * @since 2016/09/19
 	 */
-	@SquirrelJMEVendorApi
 	public final MutableJavaManifestAttributes getMainAttributes()
 	{
 		return this.get("");
@@ -195,7 +186,6 @@ public class MutableJavaManifest
 	 * @since 2016/09/19
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final MutableJavaManifestAttributes put(String __k,
 		MutableJavaManifestAttributes __v)
 		throws NullPointerException
@@ -222,7 +212,6 @@ public class MutableJavaManifest
 	 * @throws NullPointerException On null arguments.
 	 * @since 2016/09/19
 	 */
-	@SquirrelJMEVendorApi
 	public final OutputStream write(OutputStream __os)
 		throws IOException, NullPointerException
 	{
@@ -243,7 +232,6 @@ public class MutableJavaManifest
 	 * @throws NullPointerException On null arguments.
 	 * @since 2016/09/19
 	 */
-	@SquirrelJMEVendorApi
 	public final Appendable write(Appendable __os)
 		throws IOException, NullPointerException
 	{

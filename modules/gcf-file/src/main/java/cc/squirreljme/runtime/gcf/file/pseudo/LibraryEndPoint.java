@@ -12,7 +12,6 @@ package cc.squirreljme.runtime.gcf.file.pseudo;
 import cc.squirreljme.jvm.mle.JarPackageShelf;
 import cc.squirreljme.jvm.mle.RawJarPackageBracketInputStream;
 import cc.squirreljme.jvm.mle.brackets.JarPackageBracket;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.full.attrib.ExtraFileAttributes;
 import cc.squirreljme.runtime.gcf.file.FileEndPoint;
 import cc.squirreljme.runtime.gcf.uri.UriGenericPart;
@@ -31,22 +30,18 @@ import org.jetbrains.annotations.Nullable;
  *
  * @since 2025/12/27
  */
-@SquirrelJMEVendorApi
 public class LibraryEndPoint
 	extends FileEndPoint
 {
 	/** Decoded host. */
-	@SquirrelJMEVendorApi
 	public static final String DECODED_HOST =
 		"!?x-squirreljme-library://?!";
 	
 	/** Host. */
-	@SquirrelJMEVendorApi
 	public static final String HOST =
 		"!%3Fx-squirreljme-library%3A%2F%2F%3F!";
 	
 	/** The Jar being accessed. */
-	@SquirrelJMEVendorApi
 	protected final JarPackageBracket jar;
 	
 	/** The cached library listing. */
@@ -62,7 +57,6 @@ public class LibraryEndPoint
 	 * @throws NullPointerException On null arguments.
 	 * @since 2025/12/27
 	 */
-	@SquirrelJMEVendorApi
 	public LibraryEndPoint(@NotNull JarPackageBracket __jar,
 		UriGenericPart __part, int __mode, @Nullable UriGenericPart __dotDot)
 		throws NullPointerException
@@ -80,7 +74,6 @@ public class LibraryEndPoint
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected final ExtraFileAttributes attachedAttributes()
 		throws SecurityException
 	{
@@ -95,7 +88,6 @@ public class LibraryEndPoint
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected FileStore attachedFileStore()
 		throws SecurityException
 	{
@@ -108,7 +100,6 @@ public class LibraryEndPoint
 	 * @since 2025/12/27
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected FileSystem attachedFileSystem()
 		throws SecurityException
 	{
@@ -121,7 +112,6 @@ public class LibraryEndPoint
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public void close()
 		throws IOException
 	{
@@ -137,7 +127,6 @@ public class LibraryEndPoint
 	 * @since 2025/12/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected void listDirectory(@NotNull Map<String, UriGenericPart> __into)
 		throws IOException, NullPointerException, SecurityException
 	{
@@ -222,7 +211,6 @@ public class LibraryEndPoint
 	 * @since 2026/01/01
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	protected InputStream openInputStream()
 		throws IOException, SecurityException
 	{
@@ -253,7 +241,6 @@ public class LibraryEndPoint
 	 * @throws NullPointerException On null arguments.
 	 * @since 2026/01/08
 	 */
-	@SquirrelJMEVendorApi
 	public static UriGenericPart libraryPart(JarPackageBracket __library,
 		@Nullable String[] __fileName)
 		throws NullPointerException

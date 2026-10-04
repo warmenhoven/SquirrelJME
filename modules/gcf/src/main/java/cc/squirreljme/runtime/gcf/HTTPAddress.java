@@ -9,10 +9,8 @@
 
 package cc.squirreljme.runtime.gcf;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import net.multiphasicapps.collections.EmptyList;
 import net.multiphasicapps.collections.UnmodifiableList;
@@ -23,28 +21,22 @@ import org.intellij.lang.annotations.Language;
  *
  * @since 2019/05/06
  */
-@SquirrelJMEVendorApi
 public final class HTTPAddress
 	implements SocketAddress
 {
 	/** The IP Address. */
-	@SquirrelJMEVendorApi
 	public final IPAddress ipaddr;
 	
 	/** The file. */
-	@SquirrelJMEVendorApi
 	public final FileAddress file;
 	
 	/** The query. */
-	@SquirrelJMEVendorApi
 	public final String query;
 	
 	/** The fragment. */
-	@SquirrelJMEVendorApi
 	public final String fragment;
 	
 	/** Parameters which exist within the address. */
-	@SquirrelJMEVendorApi
 	public final List<String> parameters;
 	
 	/**
@@ -58,7 +50,6 @@ public final class HTTPAddress
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/06
 	 */
-	@SquirrelJMEVendorApi
 	public HTTPAddress(IPAddress __ip, FileAddress __file,
 		List<String> __parameters, String __query,
 		String __frag)
@@ -89,7 +80,6 @@ public final class HTTPAddress
 	 * @since 2019/05/06
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final boolean equals(Object __o)
 	{
 		throw Debugging.todo();
@@ -100,7 +90,6 @@ public final class HTTPAddress
 	 * @since 2019/05/06
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final int hashCode()
 	{
 		throw Debugging.todo();
@@ -111,7 +100,6 @@ public final class HTTPAddress
 	 * @since 2019/05/06
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public final String toString()
 	{
 		throw Debugging.todo();
@@ -126,7 +114,6 @@ public final class HTTPAddress
 	 * @throws NullPointerException On null arguments.
 	 * @since 2019/05/06
 	 */
-	@SquirrelJMEVendorApi
 	public static HTTPAddress fromUriPart(
 		@Language("http-url-reference") String __p)
 		throws IllegalArgumentException, NullPointerException
@@ -222,7 +209,6 @@ public final class HTTPAddress
 	 * @throws NullPointerException On null arguments.
 	 * @since 2022/10/11
 	 */
-	@SquirrelJMEVendorApi
 	public static HTTPAddress fromUriPartUnchecked(String __part)
 		throws NullPointerException
 	{

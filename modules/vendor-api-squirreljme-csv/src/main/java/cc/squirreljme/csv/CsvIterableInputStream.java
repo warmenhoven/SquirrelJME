@@ -9,7 +9,6 @@
 
 package cc.squirreljme.csv;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -19,12 +18,10 @@ import java.util.NoSuchElementException;
  *
  * @since 2023/09/12
  */
-@SquirrelJMEVendorApi
 public class CsvIterableInputStream
 	implements CsvInputStream
 {
 	/** The iterator used for accessing lines. */
-	@SquirrelJMEVendorApi
 	protected final Iterator<? extends CharSequence> iterator;
 	
 	/**
@@ -34,7 +31,6 @@ public class CsvIterableInputStream
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/09/12
 	 */
-	@SquirrelJMEVendorApi
 	public CsvIterableInputStream(Iterable<? extends CharSequence> __it)
 		throws NullPointerException
 	{
@@ -48,7 +44,6 @@ public class CsvIterableInputStream
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/09/14
 	 */
-	@SquirrelJMEVendorApi
 	public CsvIterableInputStream(Iterator<? extends CharSequence> __it)
 		throws NullPointerException
 	{
@@ -62,7 +57,6 @@ public class CsvIterableInputStream
 	 * {@inheritDoc}
 	 * @since 2023/09/14
 	 */
-	@SquirrelJMEVendorApi
 	@Override
 	public void close()
 	{
@@ -73,7 +67,6 @@ public class CsvIterableInputStream
 	 * {@inheritDoc}
 	 * @since 2023/09/12
 	 */
-	@SquirrelJMEVendorApi
 	@Override
 	public boolean next(StringBuilder __line)
 		throws IOException, NullPointerException

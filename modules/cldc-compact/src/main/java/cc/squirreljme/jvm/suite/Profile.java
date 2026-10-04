@@ -9,7 +9,6 @@
 
 package cc.squirreljme.jvm.suite;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
@@ -19,16 +18,13 @@ import java.util.Objects;
  *
  * @since 2016/12/14
  */
-@SquirrelJMEVendorApi
 public final class Profile
 	implements Comparable<Profile>, MarkedDependency, MarkedProvided
 {
 	/** Name. */
-	@SquirrelJMEVendorApi
 	protected final APIName name;
 	
 	/** Version. */
-	@SquirrelJMEVendorApi
 	protected final SuiteVersion version;
 	
 	/** String representation. */
@@ -42,7 +38,6 @@ public final class Profile
 	 * @throws NullPointerException If no name was specified.
 	 * @since 2017/11/30
 	 */
-	@SquirrelJMEVendorApi
 	public Profile(APIName __n, SuiteVersion __v)
 		throws NullPointerException
 	{
@@ -60,7 +55,6 @@ public final class Profile
 	 * @throws NullPointerException On null arguments.
 	 * @since 2017/11/30
 	 */
-	@SquirrelJMEVendorApi
 	public Profile(String __n)
 		throws NullPointerException
 	{
@@ -91,7 +85,6 @@ public final class Profile
 	 * @return The API name.
 	 * @since 2022/02/28
 	 */
-	@SquirrelJMEVendorApi
 	public APIName apiName()
 	{
 		return this.name;
@@ -102,7 +95,6 @@ public final class Profile
 	 * @since 2017/11/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public int compareTo(Profile __o)
 	{
 		int rv = this.name.compareTo(__o.name);
@@ -123,7 +115,6 @@ public final class Profile
 	 * @since 2017/11/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean equals(Object __o)
 	{
 		if (this == __o)
@@ -142,7 +133,6 @@ public final class Profile
 	 * @since 2017/11/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public int hashCode()
 	{
 		return this.name.hashCode() ^
@@ -154,7 +144,6 @@ public final class Profile
 	 * @since 2017/12/31
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean isOptional()
 	{
 		return false;
@@ -165,7 +154,6 @@ public final class Profile
 	 * @since 2017/12/31
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public boolean matchesProvided(MarkedProvided __mp)
 		throws NullPointerException
 	{
@@ -180,7 +168,6 @@ public final class Profile
 	 * @since 2017/11/30
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String toString()
 	{
 		Reference<String> ref = this._string;
@@ -199,7 +186,6 @@ public final class Profile
 	 * @return The profile version.
 	 * @since 2017/12/05
 	 */
-	@SquirrelJMEVendorApi
 	public SuiteVersion version()
 	{
 		return this.version;

@@ -10,8 +10,6 @@
 package cc.squirreljme.runtime.lcdui.scritchui;
 
 import cc.squirreljme.jvm.mle.scritchui.ScritchEventLoopInterface;
-import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 
 /**
  * This keeps track of an object string, if it changes then an update to
@@ -26,7 +24,6 @@ import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 public abstract class ObjectTracker<T, L>
 {
 	/** The event loop used. */
-	@SquirrelJMEVendorApi
 	protected final ScritchEventLoopInterface loop;
 	
 	/** The current value. */
@@ -43,7 +40,6 @@ public abstract class ObjectTracker<T, L>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2024/07/20
 	 */
-	@SquirrelJMEVendorApi
 	public ObjectTracker(ScritchEventLoopInterface __loop, T __init)
 		throws NullPointerException
 	{
@@ -62,7 +58,6 @@ public abstract class ObjectTracker<T, L>
 	 * @throws NullPointerException If no listener was specified.
 	 * @since 2024/07/20
 	 */
-	@SquirrelJMEVendorApi
 	protected abstract void exec(L __listener, T __value)
 		throws NullPointerException;
 	
@@ -73,7 +68,6 @@ public abstract class ObjectTracker<T, L>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2024/07/18
 	 */
-	@SquirrelJMEVendorApi
 	public final void connect(L __listener)
 		throws NullPointerException
 	{
@@ -96,7 +90,6 @@ public abstract class ObjectTracker<T, L>
 	 * @return The current text.
 	 * @since 2024/07/18
 	 */
-	@SquirrelJMEVendorApi
 	public final T get()
 	{
 		synchronized (this)
@@ -111,7 +104,6 @@ public abstract class ObjectTracker<T, L>
 	 * @param __t The text to set.
 	 * @since 2024/07/18
 	 */
-	@SquirrelJMEVendorApi
 	public final void set(T __t)
 	{
 		L listener;

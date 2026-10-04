@@ -13,7 +13,6 @@ import cc.squirreljme.jvm.mle.DebugShelf;
 import cc.squirreljme.jvm.mle.brackets.TracePointBracket;
 import cc.squirreljme.runtime.cldc.annotation.Api;
 import cc.squirreljme.runtime.cldc.annotation.KeepAbsolutelyEverything;
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.CallTraceUtils;
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -46,7 +45,6 @@ public class Throwable
 	private boolean _initCause;
 	
 	/** The stack trace for this throwable. */
-	@SquirrelJMEVendorApi
 	volatile TracePointBracket[] _stackTrace;
 	
 	/**

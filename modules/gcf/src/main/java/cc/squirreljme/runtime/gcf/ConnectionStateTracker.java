@@ -9,22 +9,17 @@
 
 package cc.squirreljme.runtime.gcf;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
-
 /**
  * This is a tracker for the connection state.
  *
  * @since 2019/05/13
  */
-@SquirrelJMEVendorApi
 public final class ConnectionStateTracker
 {
 	/** Has the input been closed? */
-	@SquirrelJMEVendorApi
 	volatile boolean inClosed;
 	
 	/** Has the output been closed? */
-	@SquirrelJMEVendorApi
 	volatile boolean outClosed;
 }
 

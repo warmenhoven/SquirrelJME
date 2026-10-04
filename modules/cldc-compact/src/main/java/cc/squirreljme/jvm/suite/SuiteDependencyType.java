@@ -9,7 +9,6 @@
 
 package cc.squirreljme.jvm.suite;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import cc.squirreljme.runtime.cldc.debug.Debugging;
 
 /**
@@ -17,23 +16,18 @@ import cc.squirreljme.runtime.cldc.debug.Debugging;
  *
  * @since 2017/02/22
  */
-@SquirrelJMEVendorApi
 public enum SuiteDependencyType
 {
 	/** Liblet. */
-	@SquirrelJMEVendorApi
 	LIBLET,
 	
 	/** Standard. */
-	@SquirrelJMEVendorApi
 	STANDARD,
 	
 	/** Service. */
-	@SquirrelJMEVendorApi
 	SERVICE,
 	
 	/** Proprietary. */
-	@SquirrelJMEVendorApi
 	PROPRIETARY,
 	
 	/** End. */
@@ -44,7 +38,6 @@ public enum SuiteDependencyType
 	 * @since 2017/02/22
 	 */
 	@Override
-	@SquirrelJMEVendorApi
 	public String toString()
 	{
 		// Convert string
@@ -70,7 +63,6 @@ public enum SuiteDependencyType
 	 * @throws NullPointerException On null arguments.
 	 * @since 2017/02/22
 	 */
-	@SquirrelJMEVendorApi
 	public static SuiteDependencyType of(String __s)
 		throws InvalidSuiteException, NullPointerException
 	{

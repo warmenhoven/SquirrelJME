@@ -8,8 +8,6 @@
 
 package cc.squirreljme.runtime.lcdui.image;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
-
 /**
  * This factory is used for creating images.
  *
@@ -17,7 +15,6 @@ import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
  * @param <S> The still image type.
  * @since 2022/02/10
  */
-@SquirrelJMEVendorApi
 public interface ImageFactory<A extends S, S>
 {
 	/**
@@ -32,7 +29,6 @@ public interface ImageFactory<A extends S, S>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2022/02/10
 	 */
-	@SquirrelJMEVendorApi
 	A animatedImage(S[] __images,
 		int[] __frameTime, int __loopCount)
 		throws IllegalArgumentException, NullPointerException;
@@ -57,7 +53,6 @@ public interface ImageFactory<A extends S, S>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2022/02/10
 	 */
-	@SquirrelJMEVendorApi
 	S stillImage(int[] __b, int __o, int __l,
 		boolean __mut, boolean __alpha, int __w, int __h)
 		throws IllegalArgumentException, IndexOutOfBoundsException,

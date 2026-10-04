@@ -9,7 +9,6 @@
 
 package net.multiphasicapps.io;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.io.IOException;
 
 /**
@@ -18,7 +17,6 @@ import java.io.IOException;
  *
  * @since 2026/10/03
  */
-@SquirrelJMEVendorApi
 public interface MultiBitSource
 	extends BitSource
 {
@@ -31,7 +29,6 @@ public interface MultiBitSource
 	 * @throws IOException On read errors.
 	 * @since 2026/10/03
 	 */
-	@SquirrelJMEVendorApi
 	int readBits(int __n, boolean __msb)
 		throws IOException;
 }

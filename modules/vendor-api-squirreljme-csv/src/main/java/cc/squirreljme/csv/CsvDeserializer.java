@@ -9,7 +9,6 @@
 
 package cc.squirreljme.csv;
 
-import cc.squirreljme.runtime.cldc.annotation.SquirrelJMEVendorApi;
 import java.util.Map;
 
 /**
@@ -18,7 +17,6 @@ import java.util.Map;
  * @param <T> The type this deserializes to.
  * @since 2023/09/12
  */
-@SquirrelJMEVendorApi
 public interface CsvDeserializer<T>
 {
 	/**
@@ -29,7 +27,6 @@ public interface CsvDeserializer<T>
 	 * @throws NullPointerException On null arguments.
 	 * @since 2023/09/12
 	 */
-	@SquirrelJMEVendorApi
 	T deserialize(Map<String, String> __values)
 		throws NullPointerException;
 }
