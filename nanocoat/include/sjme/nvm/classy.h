@@ -138,7 +138,7 @@ SJME_LIST_DECLARE(sjme_nvm_class_methodInfo, 0);
 
 /** The basic type of @c sjme_nvm_class_methodInfo . */
 #define SJME_TYPEOF_BASIC_sjme_nvm_class_methodInfo \
-	SJME_BASIC_TYPE_ID_OBJECT
+	SJME_TYPEOF_BASIC_sjme_jobject
 
 /**
  * Base field information structure.
@@ -163,7 +163,7 @@ SJME_LIST_DECLARE(sjme_nvm_class_fieldInfo, 0);
 
 /** The basic type of @c sjme_nvm_class_fieldInfo . */
 #define SJME_TYPEOF_BASIC_sjme_nvm_class_fieldInfo \
-	SJME_BASIC_TYPE_ID_OBJECT
+	SJME_TYPEOF_BASIC_sjme_jobject
 
 /**
  * Exception handling information.
@@ -187,7 +187,7 @@ SJME_LIST_DECLARE(sjme_nvm_class_exceptionHandler, 0);
 
 /** The basic type of @c sjme_nvm_class_exceptionHandler . */
 #define SJME_TYPEOF_BASIC_sjme_nvm_class_exceptionHandler \
-	SJME_BASIC_TYPE_ID_OBJECT
+	SJME_TYPEOF_BASIC_sjme_jobject
 
 /**
  * Method code information structure.
@@ -415,7 +415,7 @@ typedef struct sjme_nvm_class_poolEntryDouble
 	sjme_nvm_class_poolType type;
 	
 	/** The constant value. */
-	sjme_align64 sjme_jdouble value;
+	sjme_align64L sjme_jdouble value sjme_align64R;
 } sjme_nvm_class_poolEntryDouble;
 
 /**
@@ -498,7 +498,7 @@ typedef struct sjme_nvm_class_poolEntryLong
 	sjme_nvm_class_poolType type;
 	
 	/** The constant value. */
-	sjme_align64 sjme_jlong value;
+	sjme_align64L sjme_jlong value sjme_align64R;
 } sjme_nvm_class_poolEntryLong;
 
 /**

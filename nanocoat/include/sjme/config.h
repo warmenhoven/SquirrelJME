@@ -184,15 +184,28 @@ extern "C" {
 		#define SJME_CONFIG_GCC_VERSION_LEAST(major, minor) \
 			(__GNUC__ > major ? 1 : (__GNUC__ < major ? 0 : \
 			(__GNUC_MINOR__ >= minor)))
+	
+		/** Is the GCC version up to the specified version? */
+		#define SJME_CONFIG_GCC_VERSION_MOST(major, minor) \
+			(__GNUC__ < major ? 1 : (__GNUC__ <= major ? \
+			(__GNUC_MINOR__ <= minor) : 0))
 	#else
 		/** Is the GCC version the specified version? */
 		#define SJME_CONFIG_GCC_VERSION_LEAST(major, minor) \
 			(__GNUC__ > major ? 1 : (__GNUC__ < major ? 0 : \
 			(0 >= minor)))
+	
+		/** Is the GCC version up to the specified version? */
+		#define SJME_CONFIG_GCC_VERSION_MOST(major, minor) \
+			(__GNUC__ < major ? 1 : (__GNUC__ <= major ? \
+			(0 <= minor) : 0))
 	#endif
 #else
 	/** Is the GCC version the specified version? */
 	#define SJME_CONFIG_GCC_VERSION_LEAST(major, minor) 0
+	
+	/** Is the GCC version up to the specified version? */
+	#define SJME_CONFIG_GCC_VERSION_MOST(major, minor) 0
 #endif
 	
 /* Fallback if there is no known compiler. */
@@ -650,19 +663,26 @@ extern "C" {
 	#define SJME_CONFIG_ROM9_ADDR NULL
 #endif
 
-/* C99 supports flexible array members. */
-#if defined(SJME_CONFIG_HAS_C99)
-	/** Flexible array members. */
-	#define sjme_flexibleArrayCount
-#elif defined(SJME_CONFIG_HAS_MSVC)
-	/** Flexible array count, MSVC requires 1 because C2233. */
+#if defined(SJME_CONFIG_HAS_MSVC) || SJME_CONFIG_GCC_VERSION_MOST(2, 95)
+	/** 
+	 * Flexible array count.
+	 * 
+	 * MSVC requires 1 because C2233. 
+	 * Older GCC does not support this yet.
+	 */
 	#define sjme_flexibleArrayCount 1
-#elif defined(SJME_CONFIG_HAS_CLANG) || defined(SJME_CONFIG_HAS_GCC)
-	/** Flexible array size count, GCC is fine with blank. */
+#elif defined(SJME_CONFIG_HAS_C99) || \
+	defined(SJME_CONFIG_HAS_CLANG) || defined(SJME_CONFIG_HAS_GCC) || \
+	defined(SJME_CONFIG_HAS_WATCOM)
+	/**
+	 * Flexible array size count.
+	 * 
+	 * C99, GCC, and Watcom support it being blank
+	 */
 	#define sjme_flexibleArrayCount
-#elif defined(SJME_CONFIG_HAS_WATCOM)
-	/** Flexible array size count. */
-	#define sjme_flexibleArrayCount
+#else
+	/** Flexible array size count, unknown compiler. */
+	#define sjme_flexibleArrayCount 1
 #endif
 	
 /* SDCC does not have normal alloca. */
@@ -705,9 +725,6 @@ extern "C" {
 #elif defined(SJME_CONFIG_HAS_C11) && !defined(__STDC_NO_ATOMICS__)
 	/** Supports C11 atomics. */
 	#define SJME_CONFIG_HAS_ATOMIC_C11
-#elif defined(SJME_CONFIG_HAS_CLANG)
-	/** CLang is based off GCC's newer __atomic family. */
-	#define SJME_CONFIG_HAS_ATOMIC_GCC
 #elif defined(SJME_CONFIG_HAS_GCC)
 	/* GCC 4.7 introduces the __atomic family. */
 	#if SJME_CONFIG_GCC_VERSION_LEAST(4, 7)
@@ -717,6 +734,9 @@ extern "C" {
 		/** GCC Legacy Atomics. */
 		#define SJME_CONFIG_HAS_ATOMIC_GCC_LEGACY
 	#endif
+#elif defined(SJME_CONFIG_HAS_CLANG)
+	/** CLang is based off GCC's newer __atomic family. */
+	#define SJME_CONFIG_HAS_ATOMIC_GCC
 #endif
 
 #if !defined(SJME_CONFIG_HAS_ATOMIC)

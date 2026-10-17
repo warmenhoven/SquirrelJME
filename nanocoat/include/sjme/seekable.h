@@ -123,14 +123,14 @@ typedef struct sjme_seekable_implState
 	sjme_jint length;
 
 	/** Seekable flags. */
-	struct sjme_packed
+	struct sjme_packedL
 	{
 		/** Forward close? */
 		sjme_jboolean forwardClose;
 
 		/** Size is volatile. */
 		sjme_jboolean volatileSize;
-	} flags;
+	} sjme_packedR flags;
 } sjme_seekable_implState;
 
 /**
@@ -247,7 +247,7 @@ struct sjme_seekableBase
 	const sjme_seekable_functions* functions;
 	
 	/** Spinlock for stream access. */
-	sjme_alignPointer sjme_thread_spinLock lock;
+	sjme_alignPointerL sjme_thread_spinLock lock sjme_alignPointerR;
 	
 	/** The pool this is in. */
 	sjme_alloc_pool allocPool;

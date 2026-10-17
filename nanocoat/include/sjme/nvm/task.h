@@ -177,7 +177,7 @@ struct sjme_frame_frameStack
 	sjme_jint length;
 	
 	/** Pointer bases for the type on the frame. */
-	sjme_alignPointer union
+	sjme_alignPointerL union
 	{
 		/** Pointer base. */
 		sjme_pointer base;
@@ -196,7 +196,7 @@ struct sjme_frame_frameStack
 
 		/** Object values. */
 		sjme_jobject* l;
-	} base;
+	} sjme_alignPointerR base;
 };
 
 /** The object check stack type. */
@@ -310,7 +310,7 @@ struct sjme_nvm_frameBase
 	sjme_nvm_frame_gcCommit* commit;
 
 	/** Frame state flags. */
-	sjme_packed struct
+	struct sjme_packedL
 	{
 		/** Enter synchronization was performed. */
 		sjme_jboolean synchronizedEnter;
@@ -323,7 +323,7 @@ struct sjme_nvm_frameBase
 
 		/** Is this an instance initializer? */
 		sjme_jboolean isInstanceInit;
-	} flags;
+	} sjme_packedR flags;
 };
 
 /** List of stack frames. */

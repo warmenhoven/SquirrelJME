@@ -401,7 +401,7 @@ struct sjme_nvm_commonBase
 	sjme_frontEnd frontEnd;
 	
 	/** The lock to access this common item. */
-	sjme_alignPointer sjme_thread_spinLock lock;
+	sjme_alignPointerL sjme_thread_spinLock lock sjme_alignPointerR;
 
 	/** Specific close handler. */
 	sjme_closeable_closeHandlerFunc specificClose;
@@ -582,7 +582,7 @@ typedef sjme_nvm_rom_libraryBase* sjme_nvm_rom_library;
 SJME_LIST_DECLARE(sjme_nvm_rom_library, 0);
 
 /** The type ID of ROM libraries. */
-#define SJME_TYPEOF_BASIC_sjme_nvm_rom_library SJME_BASIC_TYPE_ID_OBJECT
+#define SJME_TYPEOF_BASIC_sjme_nvm_rom_library SJME_TYPEOF_BASIC_sjme_jobject
 
 /** Type size multiplier. */
 extern const sjme_jint sjme_nvm_typeMul[SJME_NUM_BASIC_TYPE_IDS];

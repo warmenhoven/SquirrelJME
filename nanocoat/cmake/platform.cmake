@@ -53,6 +53,7 @@ get_property(SQUIRRELJME_IS_DYLIB_CAPABLE
 
 # Output results of what is above
 message(STATUS "?? Cross Compiled? ${SQUIRRELJME_IS_CROSS_COMPILE}")
+message(STATUS "?? Cross Compatible? ${SQUIRRELJME_IS_CROSS_COMPATIBLE}")
 message(STATUS "?? Supports DyLibs? ${SQUIRRELJME_IS_DYLIB_CAPABLE}")
 message(STATUS "?? Bare Metal Hardware (No-OS)? ${SQUIRRELJME_IS_BARE_METAL}")
 message(STATUS "?? Absurd System (Xkcd Rocks)? ${SQUIRRELJME_IS_ABSURD}")
@@ -100,11 +101,33 @@ else()
 endif()
 
 ## Testing?
-if(SQUIRRELJME_IS_CROSS_COMPILE OR
-	${CMAKE_VERSION} VERSION_LESS_EQUAL "3.12")
+if("${SQUIRRELJME_SYSTEM}" STREQUAL "unknown" OR
+	"${SQUIRRELJME_ARCH}" STREQUAL "unknown" OR
+	SQUIRRELJME_IS_CROSS_COMPILE OR
+	SQUIRRELJME_IS_BARE_METAL OR
+	SQUIRRELJME_IS_ABSURD OR
+	SQUIRRELJME_IS_HISTORIC OR
+	NOT squirreljme_bp_version_3_13 OR
+	SQUIRRELJME_IS_LIBRETRO OR
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "amiga" OR
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "dos" OR
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "palmos" OR
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "haiku")
 	set(SQUIRRELJME_ENABLE_TESTING_DEFAULT FALSE)
 else()
 	set(SQUIRRELJME_ENABLE_TESTING_DEFAULT TRUE)
+endif()
+
+## Use self-hosted libjvm?
+# This is for any platforms which are not supported OpenJDK or any recent JDK
+if("${SQUIRRELJME_SYSTEM}" STREQUAL "aix" OR
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "linux" OR
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "macosx" OR
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "solaris" OR
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "windows")
+	set(SQUIRRELJME_SELF_HOSTED_LIBJVM_DEFAULT NO)
+else()
+	set(SQUIRRELJME_SELF_HOSTED_LIBJVM_DEFAULT YES)
 endif()
 
 ## FPIC?
@@ -192,6 +215,8 @@ squirreljme_define_option(SQUIRRELJME_ENABLE_FPIC
 	"Enable FPIC")
 squirreljme_define_option(SQUIRRELJME_ENABLE_TESTING
 	"Enable Host System Tests")
+squirreljme_define_option(SQUIRRELJME_SELF_HOSTED_LIBJVM
+	"Enable Self-Hosted libjvm")
 
 # Applications
 squirreljme_define_option(SQUIRRELJME_ENABLE_APP_ABCD

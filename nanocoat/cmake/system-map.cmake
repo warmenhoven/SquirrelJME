@@ -247,6 +247,8 @@ function(squirreljme_identify_by_defines_list outSystem outArch defines)
 	elseif("__WINE__" IN_LIST defines)
 		set(hasSystem "wine")
 	###########################################
+	elseif("__HAIKU__" IN_LIST defines)
+		set(hasSystem "haiku")
 	elseif("__APPLE__" IN_LIST defines)
 		if("TARGET_IPHONE_SIMULATOR" IN_LIST defines OR
 			"TARGET_OS_IPHONE" IN_LIST defines)
@@ -288,8 +290,6 @@ function(squirreljme_identify_by_defines_list outSystem outArch defines)
 	elseif("__SDCC" IN_LIST defines OR
 		"SDCC" IN_LIST defines)
 		set(hasSystem "sdcc")
-	elseif("__HAIKU__" IN_LIST defined)
-		set(hasSystem "haiku")
 	else()
 		set(hasSystem "unknown")
 	endif()
@@ -497,6 +497,9 @@ function(squirreljme_identify_by_cmake outSystem outArch inSystem inArch)
 	elseif("${inSystem}" STREQUAL "Windows" OR
 		"${inSystem}" STREQUAL "WindowsStore")
 		set(hasSystem "windows")
+	elseif("${inSystem}" STREQUAL "Haiku" OR
+		"${inSystem}" STREQUAL "Haiku")
+		set(hasSystem "haiku")
 	else()
 		set(hasSystem "unknown")
 	endif()
@@ -563,6 +566,12 @@ function(squirreljme_identify_by_cmake outSystem outArch inSystem inArch)
 	elseif("${inArch}" STREQUAL "ppc64" OR
 		"${inArch}" STREQUAL "powerpc64")
 		set(hasArch "powerpc64b")
+
+	# Haiku on 32-bit is called BePC
+	elseif(("${inSystem}" STREQUAL "Haiku" OR
+		"${inSystem}" STREQUAL "Haiku") AND
+		"${inArch}" STREQUAL "BePC")
+		set(hasArch "ia32")
 	else()
 		set(hasArch "unknown")
 	endif()
@@ -708,17 +717,34 @@ function(squirreljme_identify_by_current outSystem outArch)
 
 		# Use standard CMake variables defined after project()
 		else()
-			squirreljme_identify_by_cmake(hasSystem hasArch
+			# We may have previously properly detected an architecture or
+			# system via defines but do not know more details about this
+			# system, so we need to not overwrite a previous detection
+			squirreljme_identify_by_cmake(hasSystemCMake hasArchCMake
 				"${CMAKE_SYSTEM_NAME}" "${CMAKE_SYSTEM_PROCESSOR}")
+
+			# Result system was valid?
+			if(NOT "${hasSystemCMake}" STREQUAL "" AND
+				NOT "${hasSystemCMake}" STREQUAL "unknown")
+				set(hasSystem "${hasSystemCMake}")
+			endif()
+
+			# Result arch was valid?
+			if(NOT "${hasArchCMake}" STREQUAL "" AND
+				NOT "${hasArchCMake}" STREQUAL "unknown")
+				set(hasArch "${hasArchCMake}")
+			endif()
 		endif()
 	endif()
 
 	# If blank, set to unknown
-	if("${hasSystem}" STREQUAL "")
+	if("${hasSystem}" STREQUAL "" OR
+		"${hasSystem}" STREQUAL "unknown")
 		set(hasSystem "unknown")
 	endif()
 
-	if("${hasArch}" STREQUAL "")
+	if("${hasArch}" STREQUAL "" OR
+		"${hasArch}" STREQUAL "unknown")
 		set(hasArch "unknown")
 	endif()
 
@@ -878,16 +904,64 @@ else()
 	set(SQUIRRELJME_IS_ANDROID FALSE)
 endif()
 
+## Is the processor backwards compatible?
+# Note that this only is for systems that have official support for this
+# and do not require any third-party libraries to be installed. This
+# effectively means that Linux is not included as ia32 compatibility can be
+# missing due to no libraries existing or said feature being turned off in
+# the kernel
+if("${SQUIRRELJME_HOST_SYSTEM}" STREQUAL "window" AND
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "windows")
+	# Windows 64-bit can run 32-bit binaries
+	# Windows 32-bit can run 16-bit binaries
+	if(("${SQUIRRELJME_HOST_ARCH}" STREQUAL "amd64" AND
+		"${SQUIRRELJME_ARCH}" STREQUAL "ia32") OR
+		("${SQUIRRELJME_HOST_ARCH}" STREQUAL "ia32" AND
+		"${SQUIRRELJME_ARCH}" STREQUAL "ia16"))
+		set(SQUIRRELJME_IS_CROSS_COMPATIBLE TRUE)
+	else()
+		set(SQUIRRELJME_IS_CROSS_COMPATIBLE FALSE)
+	endif()
+elseif("${SQUIRRELJME_HOST_SYSTEM}" STREQUAL "macosx" AND
+	"${SQUIRRELJME_SYSTEM}" STREQUAL "macosx")
+	# macOS ARM can run Intel 64-bit binaries
+	# macOS 64-bit can run 32-bit binaries
+	# macOS 32-bit can run PowerPC binaries
+	if(("${SQUIRRELJME_HOST_ARCH}" STREQUAL "arm64l" AND
+		"${SQUIRRELJME_ARCH}" STREQUAL "amd64") OR
+		("${SQUIRRELJME_HOST_ARCH}" STREQUAL "amd64" AND
+		"${SQUIRRELJME_ARCH}" STREQUAL "ia32") OR
+		("${SQUIRRELJME_HOST_ARCH}" STREQUAL "ia32" AND
+		"${SQUIRRELJME_ARCH}" STREQUAL "powerpc32b"))
+		set(SQUIRRELJME_IS_CROSS_COMPATIBLE TRUE)
+	else()
+		set(SQUIRRELJME_IS_CROSS_COMPATIBLE FALSE)
+	endif()
+else()
+	set(SQUIRRELJME_IS_CROSS_COMPATIBLE FALSE)
+endif()
+
 # Is this cross compiled?
 # If this is targeting Android, always treat as cross-compiled even if we
 # are running on Android due to all of the pseudo-Linux based systems
 # available on the platform
 # Bare metal is always cross compiled
-if (NOT "${SQUIRRELJME_HOST_SYSTEM}" STREQUAL "${SQUIRRELJME_SYSTEM}" OR
-	NOT "${SQUIRRELJME_HOST_ARCH}" STREQUAL "${SQUIRRELJME_ARCH}" OR
-	SQUIRRELJME_IS_ANDROID OR
+if(SQUIRRELJME_IS_ANDROID OR
 	SQUIRRELJME_IS_BARE_METAL)
 	set(SQUIRRELJME_IS_CROSS_COMPILE TRUE)
+
+# System/Arch difference
+elseif(NOT "${SQUIRRELJME_HOST_SYSTEM}" STREQUAL "${SQUIRRELJME_SYSTEM}" OR
+	NOT "${SQUIRRELJME_HOST_ARCH}" STREQUAL "${SQUIRRELJME_ARCH}")
+	# This can be cancelled out if a backwards compatibility layer can run
+	# these binaries
+	if(SQUIRRELJME_IS_CROSS_COMPATIBLE)
+		set(SQUIRRELJME_IS_CROSS_COMPILE FALSE)
+	else()
+		set(SQUIRRELJME_IS_CROSS_COMPILE TRUE)
+	endif()
+
+# Both are the same
 else()
 	set(SQUIRRELJME_IS_CROSS_COMPILE FALSE)
 endif()

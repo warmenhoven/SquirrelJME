@@ -164,8 +164,13 @@ typedef sjme_intPointer sjme_thread_id;
 	/** Unbump Thread. */
 	#define SJME_THREAD_UNBUMP(x) (x)
 #endif
+	
+#pragma region(atomics)
 
-SJME_ATOMIC_DECLARE(sjme_thread, 0);
+#define sjme_atomic_type sjme_thread
+#include "sjme/atomicTemplate.h"
+	
+#pragma endregion(atomics)
 
 /**
  * Main thread function type.
@@ -182,16 +187,16 @@ typedef sjme_thread_result (sjme_attrThreadCall *sjme_thread_mainFunc)(
  * 
  * @since 2024/07/19
  */
-typedef volatile struct sjme_alignPointerL sjme_thread_spinLock
+typedef sjme_attrVolatileStruct struct sjme_alignPointerL sjme_thread_spinLock
 {
 	/** The thread that is currently poking this lock. */
-	sjme_alignPointer sjme_atomic(sjme_thread) poke;
+	sjme_alignPointerL sjme_atomic(sjme_thread) poke sjme_alignPointerR;
 	
 	/** The thread that owns this lock. */
-	sjme_alignPointer sjme_atomic(sjme_thread) owner;
+	sjme_alignPointerL sjme_atomic(sjme_thread) owner sjme_alignPointerR;
 	
 	/** Lock count. */
-	sjme_alignPointer sjme_atomic(sjme_jint) count;
+	sjme_alignPointerL sjme_atomic(sjme_jint) count sjme_alignPointerR;
 } sjme_alignPointerR sjme_thread_spinLock;
 
 /**
@@ -199,16 +204,16 @@ typedef volatile struct sjme_alignPointerL sjme_thread_spinLock
  * 
  * @since 2024/10/22
  */
-typedef volatile struct sjme_alignPointerL sjme_thread_rwLock
+typedef sjme_attrVolatileStruct struct sjme_alignPointerL sjme_thread_rwLock
 {
 	/** Pointer to the lock responsible for reading. */
-	sjme_alignPointer sjme_thread_spinLock* read;
+	sjme_alignPointerL sjme_thread_spinLock* read sjme_alignPointerR;
 	
 	/** The number of times writes are locked. */
-	sjme_alignPointer sjme_atomic(sjme_jint) writeCount;
+	sjme_alignPointerL sjme_atomic(sjme_jint) writeCount sjme_alignPointerR;
 	
 	/** The write specific lock. */
-	sjme_alignPointer sjme_thread_spinLock write;
+	sjme_alignPointerL sjme_thread_spinLock write sjme_alignPointerR;
 } sjme_alignPointerR sjme_thread_rwLock;
 
 /**
