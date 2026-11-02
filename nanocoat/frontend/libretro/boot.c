@@ -31,36 +31,49 @@ sjme_libretro_globalStruct sjme_libretro_globals =
 	sjme_sm(.envCallback, NULL),
 	sjme_sm(.videoRefreshCallback, NULL),
 	sjme_sm(.vfs, {0}),
+	sjme_sm(.log, {0}),
+	sjme_sm(.checkedLog, SJME_JNI_FALSE),
 	sjme_sm(.allocPool, NULL),
 	sjme_sm(.inState, NULL),
 	sjme_sm(.tasMode, SJME_JNI_FALSE),
-	sjme_sm(.modelessStars, {0})
+	sjme_sm(.modelessStars, {0}),
+	sjme_sm(.ticRate, 0),
 };
 
-static sjme_jboolean sjme_libretro_debugMessageHandler(sjme_lpcstr fullMessage,
+sjme_jboolean sjme_libretro_debugMessageHandler(sjme_lpcstr fullMessage,
 	sjme_lpcstr partMessage)
 {
 	struct retro_message retroMessage;
-	struct retro_log_callback retroLogCallback;
 	
 	if (sjme_libretro_globals.envCallback != NULL)
 	{
 		/* Setup details. */
-		retroMessage.frames = 240;
+		retroMessage.frames = 60;
 		retroMessage.msg = partMessage;
 	
 		/* Emit message. */
 		sjme_libretro_globals.envCallback(RETRO_ENVIRONMENT_SET_MESSAGE,
 			&retroMessage);
 		
-		/* Is logging also available? */
-		memset(&retroLogCallback, 0, sizeof(retroLogCallback));
-		if (true == sjme_libretro_globals.envCallback(
+		/* Load logging interface? */
+		if (!sjme_libretro_globals.checkedLog)
+		{
+			/* Do not check again. */
+			sjme_libretro_globals.checkedLog = SJME_JNI_TRUE;
+			
+			/* Grab the logging interface. */
+			memset(&sjme_libretro_globals.log, 0, 
+				sizeof(sjme_libretro_globals.log));
+			if (!sjme_libretro_globals.envCallback(
 			RETRO_ENVIRONMENT_GET_LOG_INTERFACE,
-				&retroLogCallback) &&
-			retroLogCallback.log != NULL)
-			retroLogCallback.log(RETRO_LOG_INFO, "%s\n",
-			fullMessage);
+				&sjme_libretro_globals.log))
+				sjme_libretro_globals.log.log = NULL;
+		}
+		
+		/* Is logging also available? */
+		if (sjme_libretro_globals.log.log != NULL)
+			sjme_libretro_globals.log.log(RETRO_LOG_INFO, "%s\n",
+				fullMessage);
 		
 		/* We handled it here, so SquirrelJME does not have to print it. */
 		return SJME_JNI_TRUE;
@@ -172,6 +185,15 @@ sjme_attrUnused RETRO_API bool retro_load_game_special(unsigned game_type,
 	sjme_lpcstr* argV;
 	sjme_nvm_bootParam bootParam;
 	const struct retro_game_info* jarInfo;
+	
+	/* Refresh options. */
+	sjme_libretro_refreshCoreOptions();
+	
+	/* Which tic rate to use? */
+	sjme_libretro_globals.ticRate = sjme_libretro_globals.options[
+		SJME_LIBRETRO_CORE_OPTION_TIC_RATE].number / 60;
+	if (sjme_libretro_globals.ticRate <= 0)
+		sjme_libretro_globals.ticRate = SJME_LIBRETRO_DEFAULT_TIC_RATE;
 
 	/* Allocate arguments to pass in. */
 	argC = 0;
@@ -240,6 +262,14 @@ sjme_attrUnused RETRO_API bool retro_load_game_special(unsigned game_type,
 		argV[argC++] = jarInfo->path;
 	}
 	
+	/* For now the hello demo. */
+	else if (sjme_libretro_globals.options[
+		SJME_LIBRETRO_CORE_OPTION_DUMP_VARS].number != 0)
+	{
+		argV[argC++] = "-jar";
+		argV[argC++] = "system-app-demo-hello.jar";
+	}
+	
 	/* Setup base boot parameters. */
 	memset(&bootParam, 0, sizeof(bootParam));
 	bootParam.nal = &sjme_libretro_nal;
@@ -259,6 +289,9 @@ sjme_attrUnused RETRO_API bool retro_load_game_special(unsigned game_type,
 		bootParam.nal, &bootParam, argC, argV)))
 		goto fail_parseCommandLine;
 	
+	/* Allow falling back to the launcher if nothing is found. */
+	bootParam.launcherFallback = SJME_JNI_TRUE;
+	
 	/* If there was no boot suite specified, load a default one. */
 	if (bootParam.bootSuite == NULL)
 	{
@@ -272,6 +305,28 @@ sjme_attrUnused RETRO_API bool retro_load_game_special(unsigned game_type,
 			&bootParam.bootSuite)) ||
 			bootParam.bootSuite == NULL)
 			goto fail_bootSuiteBackup;
+	}
+	
+#if 0
+	/* Disable ScritchUI? */
+	if (SJME_JNI_TRUE)
+		bootParam.noScritchUi = SJME_JNI_TRUE;
+#endif
+	
+	/* Initializes ScritchUI framebuffer interface. */
+	bootParam.scritchUiPre = NULL;
+	if (!bootParam.noScritchUi && bootParam.scritchUiPre == NULL)
+	{
+		/* Debug. */
+		sjme_message("Initializing ScritchUI...");
+		
+		/* Now initialize it. */
+		if (sjme_error_is(error = sjme_scritchui_pure_init(
+			sjme_libretro_globals.allocPool,
+			&bootParam.scritchUiPre,
+			&sjme_libretro_pure)) ||
+			bootParam.scritchUiPre == NULL)
+			goto fail_boot;
 	}
 
 	/* Debug. */
@@ -294,6 +349,7 @@ fail_bootSuiteBackup:
 fail_parseCommandLine:
 fail_getSystemDir:
 fail_allocArgV:
+	sjme_message("Boot failure: %d", (int)error);
 	return sjme_error_fatal(error) & 0;
 #undef MAX_ARGC
 }

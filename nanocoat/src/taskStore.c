@@ -138,7 +138,7 @@ sjme_errorCode sjme_nvm_store_initFile(
 
 	/* Calculate the actual usable length, this goes from the end of the */
 	/* buffer to the actual data start. */
-	result->totalLength = ((sjme_intPointer)SJME_POINTER_OFFSET(buf, len) -
+	result->totalLength = ((sjme_intPointer)sjme_po(buf, len) -
 		(sjme_intPointer)&result->data[0]);
 	result->freeData = result->totalLength;
 
@@ -383,6 +383,10 @@ sjme_errorCode sjme_nvm_store_windowSlot(
 	if (sjme_error_is(error = sjme_nvm_store_windowSlotInfo(inWindow,
 		&workInfo, inSlot, inSlotType)))
 		return sjme_error_default(error);
+	
+	/* If the work storage is valid, there needs to be an at chain. */
+	if (workInfo.storage != NULL && workInfo.chain.at == NULL)
+		return SJME_ERROR_ILLEGAL_STATE;
 
 	/* The window base is the actual window. */
 	windowBase = (sjme_intPointer)inWindow;
@@ -424,8 +428,9 @@ sjme_errorCode sjme_nvm_store_windowSlot(
 			break;
 
 		case SJME_NVM_STORE_WRITE_PROMOTE:
-			/* Always allocate if the slot length is different. */
-			if (inTypeLen != atStorageLen)
+			/* Always allocate if the slot length is too small. */
+			if (atStorageLen == 0 || workInfo.storage == NULL ||
+				inTypeLen > atStorageLen)
 				allocNew = SJME_JNI_TRUE;
 			break;
 
@@ -617,7 +622,7 @@ sjme_errorCode sjme_nvm_store_windowSlotInfo(
 
 		/* The raw pointer is in the same location. */
 		outInfo->rawP = outInfo->storage;
-		outInfo->rawLen = 4 * at->width;
+		outInfo->rawLen = 4 * (sjme_jint)at->width;
 	}
 
 	/* The base type of the slot. */

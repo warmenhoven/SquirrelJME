@@ -88,13 +88,13 @@ sjme_errorCode sjme_nvm_instance_proxyClassA(
 		/* Disallow proxying VM synthetic classes as these are very special */
 		/* classes which are not intended to be used with proxies. */
 		/* We also cannot proxy arrays, also obviously. */
-		if (!SJME_NVM_ACC_IS(checkClass->info->flags, INTERFACE) ||
-			SJME_NVM_ACC_IS(checkClass->info->flags, SPECIAL_PROXY) ||
-			SJME_NVM_ACC_IS(checkClass->info->flags, FINAL) ||
-			SJME_NVM_ACC_IS(checkClass->info->flags, ANNOTATION) ||
-			SJME_NVM_ACC_IS(checkClass->info->flags, ENUM) ||
-			SJME_NVM_ACC_IS(checkClass->info->flags, SPECIAL_VM_SYNTHETIC) ||
-			checkClass->info->isArray)
+		if (!SJME_NVM_ACC_IS(SJME_CL_I(checkClass)->flags, INTERFACE) ||
+			SJME_NVM_ACC_IS(SJME_CL_I(checkClass)->flags, SPECIAL_PROXY) ||
+			SJME_NVM_ACC_IS(SJME_CL_I(checkClass)->flags, FINAL) ||
+			SJME_NVM_ACC_IS(SJME_CL_I(checkClass)->flags, ANNOTATION) ||
+			SJME_NVM_ACC_IS(SJME_CL_I(checkClass)->flags, ENUM) ||
+			SJME_NVM_ACC_IS(SJME_CL_I(checkClass)->flags, SPECIAL_VM_SYNTHETIC) ||
+			SJME_CL_I(checkClass)->isArray)
 			return SJME_ERROR_INVALID_CLASS_FLAGS;
 
 		/* If the interface is not yet initialized, we need to actually do */
@@ -142,7 +142,8 @@ sjme_errorCode sjme_nvm_instance_proxyClassA(
 		sizeof(*info), SJME_NVM_STRUCT_CLASS_INFO,
 		SJME_AS_NVM_COMMONP(&info))) || info == NULL)
 	{
-		error = sjme_error_outOfMemory(inState->allocPool, sizeof(*info));
+		if (error == SJME_ERROR_OUT_OF_MEMORY)
+			error = sjme_error_outOfMemory(inState->allocPool, sizeof(*info));
 		goto fail_allocInfo;
 	}
 
@@ -193,7 +194,8 @@ sjme_errorCode sjme_nvm_instance_proxyClassA(
 		goto fail_lockWrite;
 
 	/* Use our virtualized class info. */
-	result->info = info;
+	sjme_atomic_s(sjme_nvm_class_info, &result->info, 
+		sjme_weakUpR(sjme_nvm_class_info, info));
 	result->proxyHandler = handler;
 	result->special |= SJME_NVM_ACC_SPECIAL_PROXY |
 		SJME_NVM_ACC_SPECIAL_VM_SYNTHETIC;

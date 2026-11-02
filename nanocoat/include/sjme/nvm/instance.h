@@ -235,10 +235,10 @@ typedef struct sjme_nvm_jclass_fields
 typedef struct sjme_nvm_jclass_methods
 {
 	/** Base index for methods. */
-	sjme_jshort base;
+	sjme_jushort base;
 	
 	/** The number of methods. */
-	sjme_jshort count;
+	sjme_jushort count;
 	
 	/** Method bindings for this class. */
 	sjme_list(sjme_jmethodID)* binds;
@@ -265,7 +265,7 @@ struct sjme_jclassBase
 	sjme_atomic(sjme_jint) isInitialized;
 	
 	/** The parsed class file information. */
-	sjme_nvm_class_info info;
+	sjme_atomic(sjme_nvm_class_info) info;
 	
 	/** The super class of this class. */
 	sjme_atomic(sjme_jclass) superClass;
@@ -388,6 +388,8 @@ sjme_jint sjme_nvm_instance_calcIdentityHash(
  * 
  * @param object The object to count down.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_OBJECT ...?
+ * @throws SJME_ERROR_NULL_STACK_POINTER ...?
  * @since 2025/07/19
  */
 sjme_errorCode sjme_nvm_instance_countDownR(
@@ -410,6 +412,8 @@ sjme_errorCode sjme_nvm_instance_countDownR(
  * 
  * @param object The object to count up.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_OBJECT ...?
+ * @throws SJME_ERROR_NULL_STACK_POINTER ...?
  * @since 2025/07/10
  */
 sjme_errorCode sjme_nvm_instance_countUpR(
@@ -449,16 +453,60 @@ sjme_errorCode sjme_nvm_instance_defaultInit(
 	sjme_attrInNullable sjme_jvalueTyped* argV);
 	
 /**
- * The default accessor for fields.
+ * The default accessor for normal instance fields.
  * 
  * @param instance The instance to access.
  * @param field The field to access.
+ * @param volatileStore Volatile storage, used for scratch space.
  * @return The pointer to the field data directly.
- * @since 2025/06/21
+ * @since 2026/10/31
  */
-sjme_nvm_value* sjme_nvm_instance_fieldAccessor(
+sjme_nvm_value* sjme_nvm_instance_fieldAccessorNI(
 	sjme_attrInNotNull sjme_jobject instance,
-	sjme_attrInNotNull sjme_jfieldID field);
+	sjme_attrInNotNull sjme_jfieldID field,
+	sjme_attrInOutNotNull sjme_nvm_valueVolatile* volatileStore);
+	
+/**
+ * The default accessor for normal static fields.
+ * 
+ * @param instance The instance to access.
+ * @param field The field to access.
+ * @param volatileStore Volatile storage, used for scratch space.
+ * @return The pointer to the field data directly.
+ * @since 2026/10/31
+ */
+sjme_nvm_value* sjme_nvm_instance_fieldAccessorNS(
+	sjme_attrInNotNull sjme_jobject instance,
+	sjme_attrInNotNull sjme_jfieldID field,
+	sjme_attrInOutNotNull sjme_nvm_valueVolatile* volatileStore);
+	
+/**
+ * The default accessor for volatile instance fields.
+ * 
+ * @param instance The instance to access.
+ * @param field The field to access.
+ * @param volatileStore Volatile storage, used for scratch space.
+ * @return The pointer to the field data directly.
+ * @since 2026/10/31
+ */
+sjme_nvm_value* sjme_nvm_instance_fieldAccessorVI(
+	sjme_attrInNotNull sjme_jobject instance,
+	sjme_attrInNotNull sjme_jfieldID field,
+	sjme_attrInOutNotNull sjme_nvm_valueVolatile* volatileStore);
+	
+/**
+ * The default accessor for volatile static fields.
+ * 
+ * @param instance The instance to access.
+ * @param field The field to access.
+ * @param volatileStore Volatile storage, used for scratch space.
+ * @return The pointer to the field data directly.
+ * @since 2026/10/31
+ */
+sjme_nvm_value* sjme_nvm_instance_fieldAccessorVS(
+	sjme_attrInNotNull sjme_jobject instance,
+	sjme_attrInNotNull sjme_jfieldID field,
+	sjme_attrInOutNotNull sjme_nvm_valueVolatile* volatileStore);
 
 /**
  * Initializes the field chunk.
@@ -469,6 +517,9 @@ sjme_nvm_value* sjme_nvm_instance_fieldAccessor(
  * @param fields The field binds.
  * @param placements The placements being used.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_FIELD_NOT_DIRECT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_STATIC_STRING_INIT ...?
  * @since 2025/06/21
  */
 sjme_errorCode sjme_nvm_instance_initFields(
@@ -484,6 +535,8 @@ sjme_errorCode sjme_nvm_instance_initFields(
  * @param chunk The chunk to initialize.
  * @param placements The placements to use.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_ILLEGAL_STATE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/21
  */
 sjme_errorCode sjme_nvm_instance_initFieldsChunk(
@@ -501,11 +554,17 @@ sjme_errorCode sjme_nvm_instance_initFieldsChunk(
  * @param isPut If a put operation, @c fieldId is set to @c stackType ,
  * otherwise @c stackType is written with the field value.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_FIELD_NOT_DIRECT If the field is not directly accessible.
+ * @throws SJME_ERROR_INVALID_FIELD_TYPE If the field type is not valid.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments.
+ * @throws SJME_ERROR_NULL_STACK_POINTER If the instance is null.
+ * @throws SJME_ERROR_OBJECT_MISMATCHED If memory corruption occurred or the
+ * object has been garbage collected.
  * @since 2025/06/26
  */
 sjme_errorCode sjme_nvm_instance_fieldAccessStack(
 	sjme_attrInNotNull sjme_nvm_thread contextThread,
-	sjme_attrInNotNull sjme_nvm_frame_gcCommit* commit,
+	sjme_attrInNullable sjme_nvm_frame_gcCommit* commit,
 	sjme_attrInNotNull sjme_jfieldID fieldId,
 	sjme_attrInNotNull sjme_jobject instance,
 	sjme_attrInNotNull sjme_jvalueTyped* stackType,
@@ -517,6 +576,7 @@ sjme_errorCode sjme_nvm_instance_fieldAccessStack(
  * @param contextThread The context thread.
  * @param instance The object instance.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/22
  */
 sjme_errorCode sjme_nvm_instance_monitorEnter(
@@ -529,6 +589,8 @@ sjme_errorCode sjme_nvm_instance_monitorEnter(
  * @param contextThread The context thread.
  * @param instance The object instance.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NOT_LOCK_OWNER ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/22
  */
 sjme_errorCode sjme_nvm_instance_monitorExit(
@@ -543,6 +605,10 @@ sjme_errorCode sjme_nvm_instance_monitorExit(
  * @param componentType The component type of the array.
  * @param arrayLength The length of the array to allocate.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NEGATIVE_ARRAY_SIZE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_TOO_LARGE ...?
  * @since 2025/03/17
  */
 sjme_errorCode sjme_nvm_instance_objectArrayNewR(
@@ -576,6 +642,9 @@ sjme_errorCode sjme_nvm_instance_objectArrayNewR(
  * @param componentType The component type of the array.
  * @param arrayLength The length of the array to allocate.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NEGATIVE_ARRAY_SIZE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/03/17
  */
 sjme_errorCode sjme_nvm_instance_objectArrayNewTR(
@@ -612,6 +681,8 @@ sjme_errorCode sjme_nvm_instance_objectArrayNewTR(
  * @param outObject The resultant object.
  * @param inClass The class type to use for the object.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/02/23
  */
 sjme_errorCode sjme_nvm_instance_objectNewR(
@@ -650,6 +721,8 @@ sjme_errorCode sjme_nvm_instance_objectNewR(
  * a bracket does not have this distinction, this must be @code -1 @endcode.
  * @param outObject The resultant bracket object.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/28
  */
 sjme_errorCode sjme_nvm_instance_objectNewBracketR(
@@ -687,6 +760,8 @@ sjme_errorCode sjme_nvm_instance_objectNewBracketR(
  * @param outObject The resultant object.
  * @param inClass The class type to use for the object.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/02/23
  */
 sjme_errorCode sjme_nvm_instance_objectNewN(

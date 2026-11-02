@@ -90,22 +90,22 @@ extern "C" {
 		SJME_LIST_ELEMENTS_OFFSET(type, numPointerStars)) + \
 	(sizeof(SJME_TOKEN_TYPE(type, numPointerStars)) * (size_t)(count)))
 
-/** List of @link sjme_jbyte. */
+/** List of @link sjme_jbyte @endlink. */
 SJME_LIST_DECLARE(sjme_jbyte, 0);
 
-/** List of @link sjme_jubyte. */
+/** List of @link sjme_jubyte @endlink. */
 SJME_LIST_DECLARE(sjme_jubyte, 0);
 
-/** List of @link sjme_jshort. */
+/** List of @link sjme_jshort @endlink. */
 SJME_LIST_DECLARE(sjme_jshort, 0);
 
-/** List of @link sjme_jchar. */
+/** List of @link sjme_jchar @endlink. */
 SJME_LIST_DECLARE(sjme_jchar, 0);
 
-/** List of @link sjme_jint. */
+/** List of @link sjme_jint @endlink. */
 SJME_LIST_DECLARE(sjme_jint, 0);
 
-/** List of @link sjme_jint* . */
+/** List of @link sjme_jint* @endlink . */
 SJME_LIST_DECLARE(sjme_jint, 1);
 
 /** List of @link sjme_juint @endlink . */
@@ -134,6 +134,9 @@ SJME_LIST_DECLARE(sjme_jobject, 0);
 
 /** List of @link sjme_jstring @endlink . */
 SJME_LIST_DECLARE(sjme_jstring, 0);
+
+/** List of @link sjme_charSeq @endlink . */
+SJME_LIST_DECLARE(sjme_charSeq, 0);
 
 /**
  * List reference.
@@ -179,6 +182,8 @@ typedef sjme_list(sjme_jint) sjme_list_void;
  * @param elementOffset The offset of elements in the list.
  * @param pointerCheck A check to see if it is a valid pointer.
  * @return Any resultant error code, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2023/12/17
  */
 sjme_errorCode sjme_list_allocR(
@@ -239,6 +244,9 @@ sjme_errorCode sjme_list_allocR(
  * @param elementOffset The offset of elements in the list.
  * @param pointerCheck A check to see if it is a valid pointer.
  * @return Any resultant error code, if any.
+ * @throws SJME_ERROR_INDEX_OUT_OF_BOUNDS ...?
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/04/15
  */
 sjme_errorCode sjme_list_copyR(
@@ -281,6 +289,8 @@ sjme_errorCode sjme_list_copyR(
  * @param elementOffset The offset of elements in the list.
  * @param pointerCheck A check to see if it is a valid pointer.
  * @return Any resultant error code, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/02/21
  */
 sjme_errorCode sjme_list_directInitR(
@@ -509,6 +519,9 @@ sjme_errorCode sjme_list_newVAR(
  * @param argC The argument count.
  * @param argV The arguments.
  * @return Any resultant error.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_UNKNOWN ...?
  * @since 2023/12/17
  */
 sjme_errorCode sjme_list_flattenArgCV(
@@ -524,6 +537,7 @@ sjme_errorCode sjme_list_flattenArgCV(
  * @param outList The resultant list.
  * @param inNulString The input string.
  * @return Any resultant error.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/02/19
  */
 sjme_errorCode sjme_list_flattenArgNul(
@@ -542,6 +556,7 @@ sjme_errorCode sjme_list_flattenArgNul(
  * @param elementOffset The offset of elements in the list.
  * @param pointerCheck A check to see if it is a valid pointer.
  * @return Any resultant error code, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/01/04
  */
 sjme_errorCode sjme_list_replaceR(
@@ -582,6 +597,7 @@ sjme_errorCode sjme_list_replaceR(
  * @param findWhat The element to search for within the list.
  * @param outIndex The resultant output index or @c -1 if not found.
  * @return Any resultant orr, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/01/03
  */
 sjme_errorCode sjme_list_search(
@@ -597,7 +613,7 @@ sjme_errorCode sjme_list_search(
  * @param comparator The comparison to use for entries.
  * @param findWhat The element to search for within the list.
  * @param outIndex The resultant index if found, or
- * will be @begincode (-(insertion point) - 1) @endcode if it was not found
+ * will be @code (-(insertion point) - 1) @endcode if it was not found
  * in the list.
  * @return Any resultant error, if any.
  * @see sjme_list_searchInsertionPoint

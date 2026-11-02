@@ -597,16 +597,16 @@ struct sjme_nvm_class_infoBase
 
 	/** The interfaces this class implements. */
 	sjme_list(sjme_nvm_stringPool_string)* interfaceNames;
+	
+	/** The field count per type. */
+	sjme_jushort fieldCount[SJME_NVM_CLASS_NUM_INSTANCE_TYPE]
+		[SJME_NUM_EXTENDED_JAVA_TYPE_IDS];
 
 	/** Fields within the method. */
 	sjme_list(sjme_nvm_class_fieldInfo)* fields;
 	
-	/** The field count per type. */
-	sjme_jshort fieldCount[SJME_NVM_CLASS_NUM_INSTANCE_TYPE]
-		[SJME_NUM_EXTENDED_JAVA_TYPE_IDS];
-	
 	/** The method count per type. */
-	sjme_jshort methodCount[SJME_NVM_CLASS_NUM_INSTANCE_TYPE];
+	sjme_jushort methodCount[SJME_NVM_CLASS_NUM_INSTANCE_TYPE];
 
 	/** Methods within the class. */
 	sjme_list(sjme_nvm_class_methodInfo)* methods;
@@ -691,26 +691,48 @@ typedef enum sjme_nvm_class_annotationTag
 	/** Array tag. */
 	SJME_NVM_CLASS_ANNOTATION_TAG_ARRAY = '[',
 } sjme_nvm_class_annotationTag;
-
-struct sjme_nvm_class_annotationBase
-{
-	/** The class name. */
-	sjme_nvm_stringPool_string className;
 	
+struct sjme_nvm_class_annotationValue
+{
 	/** The field name. */
 	sjme_nvm_stringPool_string fieldName;
 	
 	/** The tag for the value. */
 	sjme_nvm_class_annotationTag tag;
 	
-	/** Referenced class. */
-	sjme_nvm_stringPool_string refClass;
+	/** The value data for the annotation. */
+	union
+	{
+		/** Referenced class. */
+		sjme_nvm_stringPool_string refClass;
 	
-	/** Java value. */
-	sjme_jvalueTyped valueJava;
+		/** Java value. */
+		sjme_jvalueTyped java;
 	
-	/** String Value. */
-	sjme_nvm_stringPool_string valueString;
+		/** String Value. */
+		sjme_nvm_stringPool_string string;
+		
+		/** Annotation sub-value. */
+		sjme_nvm_class_annotation* annotation;
+		
+		/** Array based annotation data (recursive). */
+		struct sjme_list_sjme_nvm_class_annotationValue* array;
+	} value;
+};
+	
+/** A list of @link sjme_nvm_class_annotationValue @endlink . */
+SJME_LIST_DECLARE(sjme_nvm_class_annotationValue, 0);
+
+struct sjme_nvm_class_annotationBase
+{
+	/** The class name. */
+	sjme_nvm_stringPool_string className;
+	
+	/** The number of values in this annotation. */
+	sjme_jint numValues;
+	
+	/** The contained annotation values. */
+	sjme_list(sjme_nvm_class_annotationValue)* values;
 };
 
 struct sjme_nvm_class_fieldInfoBase
@@ -923,6 +945,8 @@ typedef struct sjme_nvm_class_parseAttributeHandler
  * @param outArgT Output argument types.
  * @param outArgR Output return type of method.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_METHOD_TYPE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/02/16
  */
 sjme_errorCode sjme_nvm_class_calcMethodArgs(
@@ -940,6 +964,8 @@ sjme_errorCode sjme_nvm_class_calcMethodArgs(
  * @param atP The pointer to the current character index, will be incremented
  * after a read occurs.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_FIELD_TYPE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/19
  */
 sjme_errorCode sjme_nvm_class_descriptorFieldSlots(
@@ -954,6 +980,8 @@ sjme_errorCode sjme_nvm_class_descriptorFieldSlots(
  * @param outArgSlots The number of argument slots.
  * @param outRvSlots The number of return value slots.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_METHOD_TYPE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/19
  */
 sjme_errorCode sjme_nvm_class_descriptorMethodSlots(
@@ -970,6 +998,8 @@ sjme_errorCode sjme_nvm_class_descriptorMethodSlots(
  * @param outBasicType The resultant basic type.
  * @param outExtendedType The resultant extended type.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_METHOD_TYPE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/10/28
  */
 sjme_errorCode sjme_nvm_class_descriptorToType(
@@ -1004,6 +1034,7 @@ sjme_errorCode sjme_nvm_class_parse(
  * @param handlers The handler used for attribute parsing.
  * @param context The context to pass to the handler.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/09/21
  */
 sjme_errorCode sjme_nvm_class_parseAttributes(
@@ -1022,6 +1053,10 @@ sjme_errorCode sjme_nvm_class_parseAttributes(
  * @param inStringPool The string pool for reused strings.
  * @param outPool The resultant read constant pool.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_CLASS_POOL_COUNT ...?
+ * @throws SJME_ERROR_INVALID_CLASS_POOL_INDEX ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_WRONG_CLASS_POOL_INDEX_TYPE ...?
  * @since 2024/09/13
  */
 sjme_errorCode sjme_nvm_class_parseConstantPool(
@@ -1039,6 +1074,7 @@ sjme_errorCode sjme_nvm_class_parseConstantPool(
  * @param inStringPool The string pool used.
  * @param outField The resultant field.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/09/21
  */
 sjme_errorCode sjme_nvm_class_parseField(

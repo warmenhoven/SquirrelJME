@@ -236,7 +236,8 @@ extern "C" {
 #endif
 
 /* The current operating system. */
-#if defined(SJME_CONFIG_IDENT_OS_SDCC) || defined(SJME_CONFIG_HAS_SDCC) || \
+#if defined(SJME_CONFIG_IDENT_OS_SDCC) || \
+	defined(SJME_CONFIG_HAS_SDCC) || \
 	defined(SJME_CONFIG_IDENT_OS_BIOS) || \
 	defined(SJME_CONFIG_IDENT_OS_EFI) || \
 	defined(SJME_CONFIG_IDENT_OS_IEEE1275OF)
@@ -360,7 +361,8 @@ extern "C" {
 #define SJME_CONFIG_POSIX_VERSION_2008 200809L
 
 #if defined(_POSIX_C_SOURCE)
-	#if !defined(SJME_CONFIG_HAS_OS_WINDOWS_WINE)
+	#if !defined(SJME_CONFIG_HAS_OS_WINDOWS_WINE) && \
+		!defined(SJME_CONFIG_HAS_OS_BAREMETAL)
 		/** POSIX is available. */
 		#define SJME_CONFIG_HAS_OS_POSIX
 	#endif
@@ -507,8 +509,20 @@ extern "C" {
 	
 	/** Has PowerPC 32-bit. */
 	#define SJME_CONFIG_HAS_ARCH_POWERPC_32
-#elif defined(__mips__) || defined(__mips) || defined(__MIPS__)
-	#if defined(SJME_CONFIG_HAS_LP64)
+#elif defined(__mips__) || defined(__mips) || defined(__MIPS__) || \
+	defined(SJME_CONFIG_IDENT_ARCH_MIPS32L) || \
+	defined(SJME_CONFIG_IDENT_ARCH_MIPS32B) || \
+	defined(SJME_CONFIG_IDENT_ARCH_MIPS64L) || \
+	defined(SJME_CONFIG_IDENT_ARCH_MIPS64B) || \
+	defined(SJME_CONFIG_IDENT_ARCH_MIPS32L6) || \
+	defined(SJME_CONFIG_IDENT_ARCH_MIPS32B6) || \
+	defined(SJME_CONFIG_IDENT_ARCH_MIPS64L6) || \
+	defined(SJME_CONFIG_IDENT_ARCH_MIPS64B6)
+	#if defined(SJME_CONFIG_HAS_LP64) || \
+		defined(SJME_CONFIG_IDENT_ARCH_MIPS64L) || \
+		defined(SJME_CONFIG_IDENT_ARCH_MIPS64B) || \
+		defined(SJME_CONFIG_IDENT_ARCH_MIPS64L6) || \
+		defined(SJME_CONFIG_IDENT_ARCH_MIPS64B6)
 		/** Has MIPS. */
 		#define SJME_CONFIG_HAS_ARCH_MIPS 64
 		
@@ -684,6 +698,17 @@ extern "C" {
 	/** Flexible array size count, unknown compiler. */
 	#define sjme_flexibleArrayCount 1
 #endif
+	
+#if !defined(sjme_flexibleArrayCountUnion)
+	/** Flexible array count but for unions. */
+	#define sjme_flexibleArrayCountUnion 1
+#endif
+	
+/** Force specific size for an enum, must be int sized. */
+#define sjme_enumInt(type) \
+	SJME__enum_##type##_MINV = INT_MIN, \
+	SJME__enum_##type##_MAXV = INT_MAX, \
+	SJME__enum_##type##_INIT = -1
 	
 /* SDCC does not have normal alloca. */
 #if !defined(sjme_alloca) && defined(SJME_CONFIG_HAS_SDCC)
@@ -893,6 +918,7 @@ extern "C" {
 	
 /* 32-bit floating point matches Java? */
 #if defined(SJME_CONFIG_HAS_FLOAT_H) && \
+	!defined(SJME_CONFIG_HAS_OS_BAREMETAL) && \
 	(defined(SJME_CONFIG_ASSUME_FLOAT_ROUND_NEAREST) || \
 		defined(SJME_CONFIG_HAS_FLOAT_ROUND_NEAREST)) && \
 	defined(FLT_EVAL_METHOD) && (FLT_EVAL_METHOD == 0) && \
@@ -963,9 +989,10 @@ extern "C" {
 		#define SJME_CONFIG_HAS_FLOAT_ROUND_NEAREST
 	#endif
 #endif
-	
+
 /* 32-bit floating point matches Java? */
 #if defined(SJME_CONFIG_HAS_FLOAT_H) && \
+	!defined(SJME_CONFIG_HAS_OS_BAREMETAL) && \
 	(defined(SJME_CONFIG_ASSUME_FLOAT_ROUND_NEAREST) || \
 		defined(SJME_CONFIG_HAS_FLOAT_ROUND_NEAREST)) && \
 	defined(FLT_EVAL_METHOD) && (FLT_EVAL_METHOD == 0) && \
@@ -1129,14 +1156,6 @@ extern "C" {
 /** Include code that should work. */
 #define SJME_CONFIG_CODE_SHOULD_WORK 1
 
-#if defined(SJME_CONFIG_HAS_MSVC)
-	#define sjme_asm(x) __asm {x}
-#elif defined(SJME_CONFIG_HAS_GCC) || defined(SJME_CONFIG_HAS_CLANG)
-	#define sjme_asm(x) __asm__ {x}
-#else
-	#define sjme_asm(x) sjme_execInlineAsm(#x)
-#endif
-
 /** Milliseconds as nanos. */
 #define SJME_NANOS_MS(n) INT64_C(n##000000)
 	
@@ -1187,6 +1206,11 @@ extern "C" {
 	#include <windows.h>
 #endif
 	
+#if defined(SJME_CONFIG_HAS_FLOAT_HARD) || \
+	defined(SJME_CONFIG_HAS_DOUBLE_HARD)
+	#include <math.h>
+#endif
+	
 /* Missing standard C functions, always include these. */
 #include "sjme/stdGone.h"
 
@@ -1198,6 +1222,34 @@ extern "C" {
 /* Memory limits. */
 #include "sjme/configMemory.h"
 	
+#if defined(SJME_CONFIG_HAS_GCC) || \
+	defined(SJME_CONFIG_HAS_CLANG)
+	/** Inline assembly is available. */
+	#define SJME_CONFIG_HAS_ASM
+	
+	/** Inline assembly statement. */
+	#define sjme_asm(...) #__VA_ARGS__
+#elif defined(SJME_CONFIG_HAS_MSVC)
+	/** Inline assembly is available. */
+	#define SJME_CONFIG_HAS_ASM
+	
+	/** Inline assembly statement (inner guard). */
+	#define sjme_asmInner__(x) 
+	
+	/** Inline assembly statement. */
+	#define sjme_asm(x) __asm { __VA_ARGS__ }
+#endif
+	
+#if defined(SJME_CONFIG_HAS_OS_BAREMETAL) || \
+	defined(SJME_CONFIG_HAS_NO_JLONG_NATIVE) || \
+	defined(SJME_CONFIG_HAS_NO_JULONG_NATIVE)
+	/** No signed long math is supported. */
+	#define SJME_CONFIG_HAS_NO_JLONG_MATH
+	
+	/** No unsigned long math is supported. */
+	#define SJME_CONFIG_HAS_NO_JULONG_MATH
+#endif
+
 /*--------------------------------------------------------------------------*/
 
 /* Anti-C++. */

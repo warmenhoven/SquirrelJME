@@ -51,8 +51,7 @@ sjme_errorCode sjme_nal_test_getEnv(
 	if (buf == NULL || env == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
 
-	sjme_todo("Impl?");
-	return sjme_error_notImplemented(0);
+	return SJME_ERROR_NOT_IMPLEMENTED;
 }
 
 sjme_errorCode sjme_nal_test_nanoTime(
@@ -92,7 +91,7 @@ sjme_errorCode sjme_nal_test_stdErr(
 	if (off < 0 || len < 0 || ((sjme_intPointer)buf + len) < 0)
 		return SJME_ERROR_INDEX_OUT_OF_BOUNDS;
 
-	fwrite(SJME_POINTER_OFFSET(buf, off), 1, len, stdout);
+	fwrite(sjme_po(buf, off), 1, len, stdout);
 	fflush(stdout);
 	return SJME_ERROR_NONE;
 }
@@ -109,8 +108,13 @@ sjme_errorCode sjme_nal_test_execPath(
 	sjme_attrOutNotNullBuf(outLen) sjme_attrOutModify sjme_lpstr out,
 	sjme_attrInPositiveNonZero sjme_jint outLen)
 {
-	sjme_todo("Impl?");
-	return sjme_error_notImplemented(0);
+	if (out == NULL)
+		return SJME_ERROR_NULL_ARGUMENTS;
+
+	if (outLen < 0)
+		return SJME_ERROR_INDEX_OUT_OF_BOUNDS;
+	
+	return SJME_ERROR_NOT_IMPLEMENTED;
 }
 
 sjme_errorCode sjme_nal_test_userHome(sjme_lpstr out,
@@ -129,7 +133,9 @@ sjme_errorCode sjme_nal_test_userName(sjme_lpstr out,
 
 const sjme_nal sjme_nal_test =
 {
+	sjme_sm(.cpuCount, sjme_nal_default_cpuCount),
 	sjme_sm(.currentTimeMillis, sjme_nal_test_currentTimeMillis),
+	sjme_sm(.defaultPath, sjme_nal_default_defaultPath),
 	sjme_sm(.encoding, sjme_nal_default_encoding),
 	sjme_sm(.execPath, sjme_nal_test_execPath),
 	sjme_sm(.fileOpen, sjme_nal_test_fileOpen),

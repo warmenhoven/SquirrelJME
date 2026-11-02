@@ -145,7 +145,7 @@ static sjme_errorCode sjme_nvm_vmClass_checkInitFieldBinds(
 	isStatic = (instanceType == SJME_NVM_CLASS_MEMBER_STATIC);
 
 	/* Determine the actual field count. */
-	fields = inClass->info->fields;
+	fields = SJME_CL_I(inClass)->fields;
 	count = 0;
 	for (i = at = 0, n = fields->length; i < n; i++)
 	{		
@@ -198,9 +198,11 @@ static sjme_errorCode sjme_nvm_vmClass_checkInitFieldBinds(
 
 		/* Objects get a wider type multiplier for their check value. */
 		extendedType = field->extendedType;
-		typeMul = sjme_nvm_typeMul[extendedType];
-		if (extendedType == SJME_JAVA_TYPE_ID_OBJECT)
+		if (extendedType == SJME_JAVA_TYPE_ID_OBJECT ||
+			field->javaType == SJME_JAVA_TYPE_ID_OBJECT)
 			typeMul = sizeof(sjme_nvm_valueObject);
+		else
+			typeMul = sjme_nvm_typeMul[extendedType];
 		
 		/* This field is not valid. */
 		if (placements->offset[extendedType] < 0)
@@ -208,8 +210,8 @@ static sjme_errorCode sjme_nvm_vmClass_checkInitFieldBinds(
 		
 		/* Determine the pointer offset for this field into the object */
 		id->pointerOffset = placements->offset[extendedType] +
-			offsetof(sjme_nvm_valueSet, values) +
-			((typeMul) * (typedOffset[extendedType]++));
+			sjme_util_sizeToInt(offsetof(sjme_nvm_valueSet, values)) +
+			(typeMul * (typedOffset[extendedType]++));
 
 		/* Lookup class this stores if an object, but do not initialize. */
 		if (id->javaType == SJME_JAVA_TYPE_ID_OBJECT)
@@ -399,7 +401,7 @@ static sjme_errorCode sjme_nvm_vmClass_checkInitMethodBind(
 		
 		/* Instance initializers never get copied. */
 		if (wantStatic && SJME_NVM_CLASS_INIT_IS(thisInfo->bits, STATIC) &&
-			!sjme_charSeq_equalsR(thisClass->info->name->seq,
+			!sjme_charSeq_equalsR(SJME_CL_I(thisClass)->name->seq,
 				found->name->seq))
 			continue;
 		
@@ -550,7 +552,7 @@ static sjme_errorCode sjme_nvm_vmClass_checkInitSuper(
 		return SJME_ERROR_NULL_ARGUMENTS;
 	
 	/* Superclass info is required. */
-	superInfo = inSuperClass->info;
+	superInfo = SJME_CL_I(inSuperClass);
 	if (superInfo == NULL)
 		return sjme_error_vmError(NULL, SJME_ERROR_SUPER_CLASS_INVALID);
 	
@@ -562,12 +564,16 @@ static sjme_errorCode sjme_nvm_vmClass_checkInitSuper(
 		for (i = 0; i < SJME_NUM_EXTENDED_JAVA_TYPE_IDS; i++)
 		{
 			/* This is just a copy of the field count. */
-			inClass->fields[index].base[i] =
-				inSuperClass->fields[index].count[i];
+			/* Static fields from super classes do not count however. */
+			if (index == SJME_NVM_CLASS_MEMBER_STATIC)
+				inClass->fields[index].base[i] = 0;
+			else
+				inClass->fields[index].base[i] =
+					inSuperClass->fields[index].count[i];
 			
 			/* However, we add the info to get our current field count. */
 			inClass->fields[index].count[i] = inClass->fields[index].base[i] +
-				inClass->info->fieldCount[index][i];
+				SJME_CL_I(inClass)->fieldCount[index][i];
 			
 			/* Overflowed? */
 			if (inClass->fields[index].base[i] < 0 ||
@@ -580,7 +586,7 @@ static sjme_errorCode sjme_nvm_vmClass_checkInitSuper(
 		/* from any of their type information. */
 		inClass->methods[index].base = inSuperClass->methods[index].count;
 		inClass->methods[index].count = inClass->methods[index].base +
-			inClass->info->methodCount[index];
+			SJME_CL_I(inClass)->methodCount[index];
 		
 		/* Overflowed? */
 		if (inClass->methods[index].base < 0 ||
@@ -621,7 +627,11 @@ static sjme_errorCode sjme_nvm_vmClass_checkLoadArray(
 	if (sjme_error_is(error = sjme_nvm_alloc(inState,
 		sizeof(*info), SJME_NVM_STRUCT_CLASS_INFO,
 		SJME_AS_NVM_COMMONP(&info))) || info == NULL)
-		return sjme_error_outOfMemory(allocPool, sizeof(*info));
+	{
+		if (error == SJME_ERROR_OUT_OF_MEMORY)
+			return sjme_error_outOfMemory(allocPool, sizeof(*info));
+		return sjme_error_default(error);
+	}
 
 	/* Lookup self name. */
 	thisName = NULL;
@@ -649,12 +659,13 @@ static sjme_errorCode sjme_nvm_vmClass_checkLoadArray(
 	inClass->special = SJME_NVM_ACC_SPECIAL_VM_SYNTHETIC;
 
 	/* Set synthetic class info. */
-	inClass->info = sjme_weakUpR(sjme_nvm_class_info, info);
+	sjme_atomic_s(sjme_nvm_class_info, &inClass->info,
+		sjme_weakUpR(sjme_nvm_class_info, info));
 
 	/* Determine component type class name. */
 	memset(componentTypeName, 0, sizeof(componentTypeName));
 	snprintf(componentTypeName, SJME_NVM_CLASS_NAME_LIMIT - 1,
-		"%s", (sjme_lpcstr)SJME_POINTER_OFFSET(
+		"%s", (sjme_lpcstr)sjme_po(
 			sjme_charSeq_tempUtf(inClass->fieldName), sizeof(sjme_cchar)));
 
 	/* Locate component type of the array. */
@@ -703,7 +714,11 @@ static sjme_errorCode sjme_nvm_vmClass_checkLoadPrimitive(
 	if (sjme_error_is(error = sjme_nvm_alloc(inState,
 		sizeof(*info), SJME_NVM_STRUCT_CLASS_INFO,
 		SJME_AS_NVM_COMMONP(&info))) || info == NULL)
-		return sjme_error_outOfMemory(allocPool, sizeof(*info));
+	{
+		if (error == SJME_ERROR_OUT_OF_MEMORY)
+			return sjme_error_outOfMemory(allocPool, sizeof(*info));
+		return sjme_error_default(error);
+	}
 
 	/* Lookup self name. */
 	thisName = NULL;
@@ -727,7 +742,8 @@ static sjme_errorCode sjme_nvm_vmClass_checkLoadPrimitive(
 		SJME_NVM_ACC_SPECIAL_PRIMITIVE;
 
 	/* Set synthetic class info. */
-	inClass->info = sjme_weakUpR(sjme_nvm_class_info, info);
+	sjme_atomic_s(sjme_nvm_class_info, &inClass->info,
+		sjme_weakUpR(sjme_nvm_class_info, info));
 
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -787,12 +803,13 @@ static sjme_errorCode sjme_nvm_vmClass_checkLoadStandard(
 		break;
 	}
 	
-	/* No class exists. */
+	/* No class exists, this is likely a virtual class. */
 	if (info == NULL)
 		return SJME_ERROR_NO_CLASS;
 	
 	/* Set class info. */
-	inClass->info = info;
+	sjme_atomic_s(sjme_nvm_class_info, &inClass->info,
+		info);
 
 	/* Set special class flags? */
 	if (libIndex == 0)
@@ -817,111 +834,6 @@ static sjme_errorCode sjme_nvm_vmClass_checkLoadStandard(
 			"java/lang/__Start__"))
 			inClass->special |= SJME_NVM_ACC_SPECIAL_START_CLASS;
 	}
-
-	/* Success! */
-	return SJME_ERROR_NONE;
-}
-
-static sjme_errorCode sjme_nvm_vmClass_isClassesAdd(
-	sjme_attrInNotNull sjme_nvm_thread contextThread,
-	sjme_attrOutNotNull sjme_list(sjme_phantom(sjme_jclass))** inOutClasses,
-	sjme_attrInNotNull sjme_jclass addClass)
-{
-#define IS_CLASSES_GROW 8
-	sjme_errorCode error;
-	sjme_jint i, n, freeSlot;
-	sjme_jclass checkClass;
-	
-	if (contextThread == NULL || inOutClasses == NULL || addClass == NULL)
-		return SJME_ERROR_NONE;
-	
-	/* If this class was already added, do not add again. */
-	n = 0;
-	freeSlot = -1;
-	if (*inOutClasses != NULL)
-	{
-		n = (*inOutClasses)->length;
-		for (i = 0; i < n; i++)
-		{
-			checkClass = sjme_atomic_g(sjme_jclass,
-				&(*inOutClasses)->elements[i]);
-			if (checkClass == addClass)
-				return SJME_ERROR_NONE;
-			
-			/* Quickly determined free slot. */
-			if (freeSlot < 0 && checkClass == NULL)
-				freeSlot = i;
-		}
-	}
-
-	/* Is there a known free slot? */
-	if (freeSlot >= 0)
-	{
-		sjme_atomic_s(sjme_jclass, &(*inOutClasses)->elements[freeSlot],
-			addClass);
-		return SJME_ERROR_NONE;
-	}
-
-	/* Grow the list. */
-	if (sjme_error_is(error = sjme_list_replace(
-		sjme_atomic_g(sjme_nvm, &contextThread->inState)->allocPool,
-		n + IS_CLASSES_GROW, inOutClasses, sjme_jclass, 0)) ||
-		(*inOutClasses) == NULL)
-		return sjme_error_default(error);
-
-	/* End of list is the first free. */
-	freeSlot = n;
-
-	/* Store into this slot. */
-	sjme_atomic_s(sjme_jclass, &(*inOutClasses)->elements[freeSlot], addClass);
-	return SJME_ERROR_NONE;
-#undef IS_CLASSES_GROW
-}
-
-static sjme_errorCode sjme_nvm_vmClass_isClassesSub(
-	sjme_attrInNotNull sjme_nvm_thread contextThread,
-	sjme_attrInNotNull sjme_jclass rootClass,
-	sjme_attrInNotNull sjme_jclass pivotClass,
-	sjme_attrOutNotNull sjme_list(sjme_phantom(sjme_jclass))** inOutClasses)
-{
-	sjme_errorCode error;
-	sjme_jint i, n;
-	sjme_jclass subClass;
-	
-	if (contextThread == NULL || rootClass == NULL || pivotClass == NULL ||
-		inOutClasses == NULL)
-		return SJME_ERROR_NULL_ARGUMENTS;
-
-	/* If this class was already added to the target, then do not process. */
-	if (*inOutClasses != NULL)
-		for (i = 0, n = (*inOutClasses)->length; i < n; i++)
-			if (sjme_atomic_g(sjme_jclass, &(*inOutClasses)->elements[i]) ==
-				pivotClass)
-				return SJME_ERROR_NONE;
-	
-	/* Handle super class. */
-	subClass = SJME_C_SU(pivotClass);
-	if (subClass != NULL)
-		if (sjme_error_is(error = sjme_nvm_vmClass_isClassesSub(
-			contextThread, rootClass, subClass, inOutClasses)))
-			return sjme_error_default(error);
-
-	/* Handle interface class. */
-	if (pivotClass->interfaceClasses != NULL)
-		for (i = 0, n = pivotClass->interfaceClasses->length; i < n; i++)
-		{
-			subClass = pivotClass->interfaceClasses->elements[i];
-			if (subClass != NULL)
-				if (sjme_error_is(error = sjme_nvm_vmClass_isClassesSub(
-					contextThread, rootClass, subClass,
-					inOutClasses)))
-					return sjme_error_default(error);
-		}
-
-	/* Add self. */
-	if (sjme_error_is(error = sjme_nvm_vmClass_isClassesAdd(
-		contextThread, inOutClasses, pivotClass)))
-		return sjme_error_default(error);
 
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -969,7 +881,7 @@ static sjme_errorCode sjme_nvm_vmClass_loaderLoadFSubAlloc(
 		return SJME_ERROR_NULL_ARGUMENTS;
 	
 	/* Cannot be blank. */
-	if (binaryName->length <= 0)
+	if (sjme_atomic_g(sjme_jint, &binaryName->length) <= 0)
 		return SJME_ERROR_INVALID_ARGUMENT;
 
 	/* We allocate within this pool. */
@@ -1173,7 +1085,7 @@ sjme_errorCode sjme_nvm_vmClass_checkInit(
 #endif
 	
 	/* The class info should now be valid. */
-	info = inClass->info;
+	info = SJME_CL_I(inClass);
 	loader = SJME_F_CL(contextThread);
 	if (info == NULL || loader == NULL)
 	{
@@ -1244,8 +1156,8 @@ sjme_errorCode sjme_nvm_vmClass_checkInit(
 
 		/* The super class must not be final. */
 		/* It also cannot be a proxy. */
-		if (SJME_NVM_ACC_IS(superClass->info->flags, FINAL) ||
-			SJME_NVM_ACC_IS(superClass->info->flags, SPECIAL_PROXY))
+		if (SJME_NVM_ACC_IS(SJME_CL_I(superClass)->flags, FINAL) ||
+			SJME_NVM_ACC_IS(SJME_CL_I(superClass)->flags, SPECIAL_PROXY))
 		{
 			error = SJME_ERROR_CLASS_CHANGED;
 			goto fail_superFlags;
@@ -1264,9 +1176,9 @@ sjme_errorCode sjme_nvm_vmClass_checkInit(
 
 			/* Interfaces must be marked as interfaces and not final, */
 			/* It also cannot be a proxy. */
-			if (!SJME_NVM_ACC_IS(interface->info->flags, INTERFACE) ||
-				SJME_NVM_ACC_IS(interface->info->flags, FINAL) ||
-				SJME_NVM_ACC_IS(interface->info->flags, SPECIAL_PROXY))
+			if (!SJME_NVM_ACC_IS(SJME_CL_I(interface)->flags, INTERFACE) ||
+				SJME_NVM_ACC_IS(SJME_CL_I(interface)->flags, FINAL) ||
+				SJME_NVM_ACC_IS(SJME_CL_I(interface)->flags, SPECIAL_PROXY))
 			{
 				error = SJME_ERROR_CLASS_CHANGED;
 				goto fail_interfaceFlags;
@@ -1337,7 +1249,7 @@ sjme_errorCode sjme_nvm_vmClass_checkInit(
 		{
 			/* There are no fields here, so we do not want to claim any */
 			/* space to store nothing. */
-			if (inClass->info->fieldCount[i][extendedType] == 0)
+			if (SJME_CL_I(inClass)->fieldCount[i][extendedType] == 0)
 			{
 				/* Invalidate. */
 				singleFields->offset[extendedType] = INT32_MIN;
@@ -1356,7 +1268,7 @@ sjme_errorCode sjme_nvm_vmClass_checkInit(
 			/* Grow the allocation size by what is needed to store */
 			/* the fields. */
 			allocSize += sjme_nvm_fieldValueSize(extendedType,
-				inClass->info->fieldCount[i][extendedType]);
+				SJME_CL_I(inClass)->fieldCount[i][extendedType]);
 		}
 
 		/* Store rounded up allocation size, always to the pointer. */
@@ -1630,229 +1542,6 @@ sjme_errorCode sjme_nvm_vmClass_loaderLoad(
 	/* Forward. */
 	return sjme_nvm_vmClass_loaderLoadF(inLoader, outClass,
 		contextThread, &wrapSeq, doInit);
-}
-
-sjme_errorCode sjme_nvm_vmClass_isAssignableFrom(
-	sjme_attrInNotNull sjme_nvm_thread contextThread,
-	sjme_attrInNotNull sjme_jclass canAssignTo,
-	sjme_attrInNotNull sjme_jclass fromClass)
-{
-	sjme_errorCode error;
-	sjme_list(sjme_phantom(sjme_jclass))* fromClasses;
-	sjme_jint i, n;
-	sjme_jint canDims, fromDims;
-
-	if (contextThread == NULL || canAssignTo == NULL || fromClass == NULL)
-		return SJME_ERROR_NULL_ARGUMENTS;
-
-	/* Same exact class is simple. */
-	if (canAssignTo == fromClass)
-		return SJME_ERROR_NONE;
-
-	/* Everything can be assigned to object! */
-	if (canAssignTo == sjme_nvm_task_commonClassR(contextThread,
-		SJME_NVM_COMMON_OBJECT))
-		return SJME_ERROR_NONE;
-
-	/* We need to compare if we can put an array in another array. */
-	canDims = sjme_atomic_g(sjme_jint, &canAssignTo->numDimensions);
-	fromDims = sjme_atomic_g(sjme_jint, &fromClass->numDimensions);
-	if (canDims > 0 || fromDims > 0)
-	{
-		/* One side has reached zero, while the other side has not, */
-		/* so there is no possible assignment here. */
-		/* Note we want to do this only when zero is hit because it is */
-		/* possible to store Float[][] into Object[], so we need to handle */
-		/* situations like this. */
-		if ((canDims == 0) != (fromDims == 0))
-			return SJME_ERROR_CLASS_CAST;
-		
-		/* Recurse into the component type for the classes, since any array */
-		/* of one component can fit in an array of another component. */
-		return sjme_nvm_vmClass_isAssignableFrom(contextThread,
-			sjme_atomic_g(sjme_jclass, 
-				&canAssignTo->componentType),
-			sjme_atomic_g(sjme_jclass, 
-				&fromClass->componentType));
-	}
-
-	/* Get the list of classes the source class is. */
-	/* b.getClass().isAssignableFrom(a.getClass()) == (a instanceof b). */
-	fromClasses = NULL;
-	if (sjme_error_is(error = sjme_nvm_vmClass_isClasses(
-		contextThread, fromClass, &fromClasses)) || fromClasses == NULL)
-		return sjme_error_defaultOr(error, SJME_ERROR_CLASS_CAST);
-
-	/* Can any of these classes be assigned to this? */
-	for (i = 0, n = fromClasses->length; i < n; i++)
-		if (canAssignTo == sjme_atomic_g(sjme_jclass,
-			&fromClasses->elements[i]))
-			return SJME_ERROR_NONE;
-
-	/* If the target is an interface, we need to check further as a direct */
-	/* class match failed. */
-	if (SJME_NVM_ACC_IS(canAssignTo->info->flags, INTERFACE))
-	{
-		sjme_todo("Impl?");
-		return sjme_error_notImplemented(0);
-	}
-
-	/* Failed to find a match. */
-	return SJME_ERROR_CLASS_CAST;
-}
-
-sjme_errorCode sjme_nvm_vmClass_isClasses(
-	sjme_attrInNotNull sjme_nvm_thread contextThread,
-	sjme_attrInNotNull sjme_jclass inClass,
-	sjme_attrOutNotNull sjme_list(sjme_phantom(sjme_jclass))** outIsClasses)
-{
-	sjme_errorCode error;
-	sjme_nvm_isClasses isClasses;
-	sjme_list(sjme_phantom(sjme_jclass))* result;
-	sjme_jint i, n, numInterfaces, at;
-	sjme_jclass checkClass;
-	sjme_list(sjme_jinterfaceID)* interfaceBinds;
-	sjme_jinterfaceID interfaceBind;
-	
-	if (contextThread == NULL || inClass == NULL || outIsClasses == NULL)
-		return SJME_ERROR_NULL_ARGUMENTS;
-
-	/* Get pre-allocated is-classes. */
-	isClasses = inClass->isClasses;
-	if (isClasses == NULL)
-		return SJME_ERROR_ILLEGAL_STATE;
-
-	/* Result already set? */
-	result = isClasses->classes;
-	if (result != NULL)
-	{
-		*outIsClasses = result;
-		return SJME_ERROR_NONE;
-	}
-
-	/* Lock. */
-	if (sjme_error_is(error = sjme_thread_spinLockGrab(
-		&isClasses->common.lock)))
-		return sjme_error_default(error);
-
-	/* Double check get. */
-	interfaceBinds = NULL;
-	result = isClasses->classes;
-	if (result == NULL)
-	{
-		/* Start at this current class. */
-		if (sjme_error_is(error = sjme_nvm_vmClass_isClassesSub(
-			contextThread, inClass, inClass, &result)))
-			goto fail_scanSelf;
-
-		/* Store result. */
-		isClasses->classes = result;
-
-		/* Normalize list count, so there are no NULLs at the end. */
-		/* Also count the number of every interface. */
-		n = result->length;
-		numInterfaces = 0;
-		for (i = 0; i < n; i++)
-		{
-			/* End of the is-classes list. */
-			checkClass = sjme_atomic_g(sjme_jclass, &result->elements[i]);
-			if (checkClass == NULL)
-				break;
-
-			/* Is this an interface? */
-			if (SJME_NVM_ACC_IS(checkClass->info->flags, INTERFACE))
-				numInterfaces++;
-		}
-
-		/* Set new length? */
-		if (i < result->length)
-		{
-			result->length = i;
-			n = i;
-		}
-		
-		/* Setup interface binds, if any. */
-		if (numInterfaces > 0)
-		{
-			/* Allocate interface binds. */
-			if (sjme_error_is(error = sjme_list_alloc(
-				sjme_atomic_g(sjme_nvm, &contextThread->inState)->allocPool,
-				numInterfaces, &interfaceBinds, sjme_jinterfaceID, 0)) ||
-				interfaceBinds == NULL)
-				goto fail_allocBinds;
-
-			/* Store binds. */
-			inClass->interfaceBinds = interfaceBinds;
-			
-			/* Individually setup each interface bind in an initial state. */
-			for (i = 0, at = 0; i < n; i++)
-			{
-				/* Not an interface? */
-				checkClass = sjme_atomic_g(sjme_jclass, &result->elements[i]);
-				if (checkClass == NULL ||
-					!SJME_NVM_ACC_IS(checkClass->info->flags, INTERFACE))
-					continue;
-
-				/* Allocate interface bind. */
-				interfaceBind = NULL;
-				if (sjme_error_is(error = sjme_nvm_alloc(
-					sjme_atomic_g(sjme_nvm, &contextThread->inState),
-					sizeof(*interfaceBind),
-					SJME_NVM_STRUCT_INTERFACE_ID,
-					SJME_AS_NVM_COMMONP(&interfaceBind))) ||
-					interfaceBind == NULL)
-					goto fail_allocBind;
-
-				/* Initialize data for it. */
-				interfaceBind->isInterface = checkClass;
-				interfaceBind->descriptorHash =
-					sjme_charSeq_hashR(checkClass->info->name->seq);
-				
-				/* Store at the next interface position. */
-				interfaceBinds->elements[at++] = interfaceBind;
-			}
-		}
-	}
-
-	/* Release lock. */
-	if (sjme_error_is(error = sjme_thread_spinLockRelease(
-		&isClasses->common.lock, NULL)))
-		return sjme_error_default(error);
-
-	/* Success! */
-	*outIsClasses = result;
-	return SJME_ERROR_NONE;
-
-fail_allocBind:
-fail_allocBinds:
-fail_scanSelf:
-fail_badAlloc:
-	/* Release before failing. */
-	sjme_thread_spinLockRelease(&isClasses->common.lock, NULL);
-
-	return sjme_error_default(error);
-}
-
-sjme_jboolean sjme_nvm_vmClass_isSuperClass(
-	sjme_attrInNotNull sjme_jclass thisClass,
-	sjme_attrInNotNull sjme_jclass otherClass)
-{
-	sjme_jclass rover;
-	
-	if (thisClass == NULL || otherClass == NULL)
-		return SJME_JNI_FALSE;
-
-	/* If these are the same class, this cannot be true. */
-	if (thisClass == otherClass)
-		return SJME_JNI_FALSE;
-
-	/* Try to find the other class. */
-	for (rover = SJME_C_SU(thisClass); rover != NULL; rover = SJME_C_SU(rover))
-		if (rover == otherClass)
-			return SJME_JNI_TRUE;
-
-	/* Not found, so is not one. */
-	return SJME_JNI_FALSE;
 }
 
 sjme_errorCode sjme_nvm_vmClass_loaderLoadArray(

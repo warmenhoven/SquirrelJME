@@ -36,9 +36,18 @@ endif()
 # Link against base libraries, statically!!
 squirreljme_link_libraries_required(squirreljme_libretro PRIVATE
 	CoreStatic
-	ScritchAudioCoreStatic
 	ScritchUiCoreStatic
-	ScritchUiPureStatic)
+	ScritchUiFBStatic
+	ScritchUiPureStatic
+	ScritchAudioCoreStatic)
+
+# Really make sure these are built
+add_dependencies(squirreljme_libretro
+	CoreStatic
+	ScritchUiCoreStatic
+	ScritchUiFBStatic
+	ScritchUiPureStatic
+	ScritchAudioCoreStatic)
 
 # Name must be specifically set for RetroArch for it to work properly
 if(SQUIRRELJME_IS_ANDROID)
@@ -115,6 +124,10 @@ if(retroArchExe AND NOT libRetroIsStatic AND
 		DEPENDS squirreljme_libretro
 		USES_TERMINAL)
 
+	# Depend on the main core
+	add_dependencies(RunSquirreljme_libretro
+		squirreljme_libretro)
+
 	# Do not try running this
 	set_target_properties(RunSquirreljme_libretro PROPERTIES
 		EXCLUDE_FROM_ALL TRUE
@@ -136,6 +149,10 @@ if(retroArchExe AND NOT libRetroIsStatic AND
 		set_target_properties(GdbSquirreljme_libretro PROPERTIES
 			EXCLUDE_FROM_ALL TRUE
 			EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+
+		# Depend on the main core
+		add_dependencies(GdbSquirreljme_libretro
+			squirreljme_libretro)
 	endif()
 endif()
 

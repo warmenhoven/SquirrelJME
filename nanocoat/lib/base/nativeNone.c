@@ -11,6 +11,56 @@
 #include "sjme/intern/nal.h"
 #include "sjme/path.h"
 
+#pragma region(cpuCount)
+#if (SJME_CONFIG_NAL_CPU_COUNT == SJME_CONFIG_NAL_IMPLEMENT_NONE)
+
+sjme_jint sjme_nal_default_cpuCount(void)
+{
+	/* Always zero. */
+	return 0;
+}
+
+#endif
+#pragma endregion(cpuCount)
+
+#pragma region(defaultPath)
+#if (SJME_CONFIG_NAL_DEFAULT_PATH == SJME_CONFIG_NAL_IMPLEMENT_NONE)
+
+sjme_errorCode sjme_nal_default_defaultPath(
+	sjme_attrInValue sjme_nvm_defaultDirectoryType defaultDir,
+	sjme_attrOutNotNullBuf(outLen) sjme_attrOutModify sjme_lpstr out,
+	sjme_attrInPositiveNonZero sjme_jint outLen)
+{
+	if (out == NULL)
+		return SJME_ERROR_NULL_ARGUMENTS;
+	
+	if (outLen <= 0 || defaultDir <= SJME_NVM_DEFAULT_DIRECTORY_UNKNOWN ||
+		defaultDir >= SJME_NVM_NUM_DEFAULT_DIRECTORY_TYPES)
+		return SJME_ERROR_INVALID_ARGUMENT;
+	
+	/* All paths by default are undefined. */
+	return SJME_ERROR_PATH_NOT_DEFINED;
+}
+
+#endif
+#pragma endregion(defaultPath)
+
+#pragma region(currentTime)
+#if (SJME_CONFIG_NAL_CURRENT_TIME == SJME_CONFIG_NAL_IMPLEMENT_NONE)
+
+sjme_errorCode sjme_nal_default_currentTimeMillis(
+	sjme_attrOutNotNull sjme_jlong* result)
+{
+	if (result == NULL)
+		return SJME_ERROR_NULL_ARGUMENTS;
+
+	/* Not available here. */
+	return SJME_ERROR_NOT_IMPLEMENTED;
+}
+
+#endif
+#pragma endregion(currentTime)
+
 #pragma region(encoding)
 #if (SJME_CONFIG_NAL_ENCODING == SJME_CONFIG_NAL_IMPLEMENT_NONE)
 
@@ -39,7 +89,7 @@ sjme_errorCode sjme_nal_default_execPath(
 		return SJME_ERROR_NULL_ARGUMENTS;
 
 	if (outLen <= 0)
-		return SJME_ERROR_INDEX_OUT_OF_BOUNDS;
+		return SJME_ERROR_INVALID_ARGUMENT;
 	
 	/* Not available here. */
 	return SJME_ERROR_NOT_IMPLEMENTED;

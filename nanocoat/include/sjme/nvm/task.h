@@ -373,12 +373,24 @@ typedef enum sjme_nvm_task_commonClassId
 	
 	/** Null class. */
 	SJME_NVM_COMMON_NULL,
+	
+	/** @code java.lang.ArrayStoreException @endcode. */
+	SJME_NVM_COMMON_EXCEPTION_ARRAY_STORE,
+	
+	/** @code java.lang.ArrayIndexOutOfBoundsException @endcode. */
+	SJME_NVM_COMMON_EXCEPTION_ARRAY_IOOB,
 
-	/** @code java.lang.ClassCastException@endcode . */
+	/** @code java.lang.ClassCastException @endcode . */
 	SJME_NVM_COMMON_EXCEPTION_CLASS_CAST,
+	
+	/** @code java.lang.ClassNotFoundException @endcode . */
+	SJME_NVM_COMMON_EXCEPTION_CLASS_NOT_FOUND,
 
 	/** @code java.lang.LinkageError @endcode . */
 	SJME_NVM_COMMON_EXCEPTION_LINKAGE_ERROR,
+	
+	/** @code cc.squirreljme.jvm.mle.exceptions.MLECallError @endcode . */
+	SJME_NVM_COMMON_EXCEPTION_MLE_CALL,
 	
 	/** @code java.lang.NullPointerException @endcode . */
 	SJME_NVM_COMMON_EXCEPTION_NULL_POINTER,
@@ -415,6 +427,30 @@ typedef enum sjme_nvm_task_commonClassId
 	
 	/** @code void @endcode . */
 	SJME_NVM_COMMON_PRIMITIVE_VOID,
+	
+	/** @code java.lang.Boolean @endcode . */
+	SJME_NVM_COMMON_BOXED_BOOLEAN,
+	
+	/** @code java.lang.Byte @endcode . */
+	SJME_NVM_COMMON_BOXED_BYTE,
+	
+	/** @code java.lang.Character @endcode . */
+	SJME_NVM_COMMON_BOXED_CHARACTER,
+	
+	/** @code java.lang.Double @endcode . */
+	SJME_NVM_COMMON_BOXED_DOUBLE,
+	
+	/** @code java.lang.Float @endcode . */
+	SJME_NVM_COMMON_BOXED_FLOAT,
+	
+	/** @code java.lang.Integer @endcode . */
+	SJME_NVM_COMMON_BOXED_INTEGER,
+	
+	/** @code java.lang.Long @endcode . */
+	SJME_NVM_COMMON_BOXED_LONG,
+	
+	/** @code java.lang.Short @endcode . */
+	SJME_NVM_COMMON_BOXED_SHORT,
 
 	/** @code java.lang.ref.PhantomReference @endcode . */
 	SJME_NVM_COMMON_REFERENCE_PHANTOM,
@@ -516,6 +552,9 @@ typedef enum sjme_nvm_task_commonClassId
 
 	/** ScritchUI Window. */
 	SJME_NVM_COMMON_SCRITCH_UI_TYPE_WINDOW,
+	
+	/** Last ScritchUI type. */
+	SJME_NVM_COMMON_SCRITCH_UI_TYPE_LAST,
 
 	/** The start of very important classes. */
 	SJME_NVM_COMMON_VERY_IMPORTANT,
@@ -594,7 +633,7 @@ typedef struct sjme_nvm_task_globals
 	sjme_atomic(sjme_jobject) singletons[SJME_NVM_TASK_NUM_SINGLETONS];
 
 	/** The default accessor for fields. */
-	sjme_nvm_jfieldAccessFunc accessor;
+	sjme_nvm_jfieldAccessFunc accessor[SJME_NVM_NUM_FIELD_ACCESS_TYPE];
 
 	/** Cached @link sjme_jbracketJarPackage @endlink for libraries. */
 	sjme_list(sjme_jbracketJarPackage)* jarBrackets;
@@ -817,6 +856,7 @@ typedef struct sjme_nvm_task_stackTraceState
  * @param inLibrary The library to map.
  * @param outBracket The resultant bracket.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/07/06
  */
 sjme_errorCode sjme_nvm_task_bracketJarPackage(
@@ -832,6 +872,7 @@ sjme_errorCode sjme_nvm_task_bracketJarPackage(
  * @param outClass The resultant class.
  * @param doInit Initialize the target class?
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
  * @since 2025/03/20
  */
 sjme_errorCode sjme_nvm_task_commonClass(
@@ -859,6 +900,7 @@ sjme_jclass sjme_nvm_task_commonClassR(
  * @param inFrame The frame to commit within.
  * @param commit Any pending garbage collection actions to be committed.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/09/06
  */
 sjme_errorCode sjme_nvm_task_frameCommit(
@@ -872,13 +914,13 @@ sjme_errorCode sjme_nvm_task_frameCommit(
  * @param commit The commit to push into.
  * @param pushObject The object to be pushed.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/09/06
  */
 sjme_errorCode sjme_nvm_task_frameCommitPush(
 	sjme_attrInNullable sjme_nvm_frame contextFrame,
 	sjme_attrInNotNull sjme_nvm_frame_gcCommit* commit,
 	sjme_attrInNotNull sjme_jobject pushObject);
-
 
 /**
  * Emits an exception with the given message.
@@ -889,11 +931,34 @@ sjme_errorCode sjme_nvm_task_frameCommitPush(
  * @param message The message to use for the message.
  * @param ... Any formatted parameters to the message.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT If the common class is invalid.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments, except for cause.
  * @since 2026/01/11
  */
 sjme_errorCode sjme_nvm_task_frameEmit(
 	sjme_attrInNotNull sjme_nvm_frame inFrame,
 	sjme_attrInValue sjme_nvm_task_commonClassId commonClass,
+	sjme_attrInNullable sjme_jthrowable cause,
+	sjme_attrInNullable sjme_attrFormatArg sjme_lpcstr message,
+	...) sjme_attrFormatOuter(3, 4);
+
+/**
+ * Emits an exception with the given message.
+ * 
+ * @param inFrame The frame to emit within.
+ * @param errorCode The error code to emit.
+ * @param cause The cause of this exception, this is optional.
+ * @param message The message to use for the message.
+ * @param ... Any formatted parameters to the message.
+ * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT If the error does not map to a common
+ * class.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments, except for cause.
+ * @since 2026/10/25
+ */
+sjme_errorCode sjme_nvm_task_frameEmitE(
+	sjme_attrInNotNull sjme_nvm_frame inFrame,
+	sjme_attrInValue sjme_errorCode errorCode,
 	sjme_attrInNullable sjme_jthrowable cause,
 	sjme_attrInNullable sjme_attrFormatArg sjme_lpcstr message,
 	...) sjme_attrFormatOuter(3, 4);
@@ -906,6 +971,7 @@ sjme_errorCode sjme_nvm_task_frameEmit(
  * @param handled If this is handled.
  * @param pcNew The PC handler.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/29
  */
 sjme_errorCode sjme_nvm_task_frameHandler(
@@ -920,6 +986,7 @@ sjme_errorCode sjme_nvm_task_frameHandler(
  * @param inFrame The frame to clear.
  * @param commit The GC commit.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/07/10
  */
 sjme_errorCode sjme_nvm_task_frameLocalClear(
@@ -936,6 +1003,10 @@ sjme_errorCode sjme_nvm_task_frameLocalClear(
  * @param outInfo Optional slot information for the local variable, this
  * may be @code NULL @endcode.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_LOCAL_INDEX_INVALID ...?
+ * @throws SJME_ERROR_LOCAL_INVALID_READ ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/07/18
  */
 sjme_errorCode sjme_nvm_task_frameLocalGet(
@@ -953,6 +1024,7 @@ sjme_errorCode sjme_nvm_task_frameLocalGet(
  * @param typeId The type of local to push.
  * @param localIndex The index of the local.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/02/12
  */
 sjme_errorCode sjme_nvm_task_frameLocalPush(
@@ -970,6 +1042,9 @@ sjme_errorCode sjme_nvm_task_frameLocalPush(
  * @param localIndex The local index to set.
  * @param inValue The value to set.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_STACK_OVERFLOW ...?
  * @since 2025/01/04
  */
 sjme_errorCode sjme_nvm_task_frameLocalSetL(
@@ -988,6 +1063,9 @@ sjme_errorCode sjme_nvm_task_frameLocalSetL(
  * @param inTypeB The second type to obtain, @c 0 is the end.
  * @param ... The subsequent types to obtain, @c 0 is the end.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_CLASS_POOL_INDEX ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_WRONG_CLASS_POOL_INDEX_TYPE ...?
  * @since 2025/01/10
  */
 sjme_errorCode sjme_nvm_task_framePool(
@@ -1006,6 +1084,7 @@ sjme_errorCode sjme_nvm_task_framePool(
  * @param inFrame The frame to clear.
  * @param commit The GC commit.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/29
  */
 sjme_errorCode sjme_nvm_task_frameStackClear(
@@ -1016,10 +1095,11 @@ sjme_errorCode sjme_nvm_task_frameStackClear(
  * Peeks a single value from the top of the stack.
  * 
  * @param inFrame The frame to pop from.
- * @param typeId The type ID to pop, if this is @link SJME_NUM_JAVA_TYPE_IDS
- * then this will disregard the type.
+ * @param typeId The type ID to pop, if this
+ * is @link SJME_NUM_JAVA_TYPE_IDS @endlink then this will disregard the type.
  * @param outValue The resultant value.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_STACK_INVALID_READ ...?
  * @since 2025/02/17
  */
 sjme_errorCode sjme_nvm_task_frameStackPeek(
@@ -1036,6 +1116,9 @@ sjme_errorCode sjme_nvm_task_frameStackPeek(
  * longer needed.
  * @param outValue The resultant value.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_STACK_INVALID_READ ...?
  * @since 2025/02/16
  */
 sjme_errorCode sjme_nvm_task_frameStackPop(
@@ -1055,6 +1138,8 @@ sjme_errorCode sjme_nvm_task_frameStackPop(
  * @param argT The types of values to pop.
  * @param argV The resultant values which were popped.
  * @return Any resultant errors, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/02/13
  */
 sjme_errorCode sjme_nvm_task_frameStackPopA(
@@ -1071,6 +1156,8 @@ sjme_errorCode sjme_nvm_task_frameStackPopA(
  * @param commit The GC commit.
  * @param inValue The value being pushed.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_STACK_OVERFLOW ...?
  * @since 2025/01/11
  */
 sjme_errorCode sjme_nvm_task_frameStackPush(
@@ -1085,6 +1172,7 @@ sjme_errorCode sjme_nvm_task_frameStackPush(
  * @param commit The GC commit.
  * @param inClassName The name of the class to push.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/01/11
  */
 sjme_errorCode sjme_nvm_task_frameStackPushClassPD(
@@ -1099,6 +1187,7 @@ sjme_errorCode sjme_nvm_task_frameStackPushClassPD(
  * @param commit The GC commit.
  * @param inString The string value being pushed.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/01/11
  */
 sjme_errorCode sjme_nvm_task_frameStackPushStringP(
@@ -1115,6 +1204,9 @@ sjme_errorCode sjme_nvm_task_frameStackPushStringP(
  * @param outInfo Optional copy of the found slot's storage information, this
  * may be @code NULL @endcode.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_STACK_UNDERFLOW ...?
  * @since 2025/02/24
  */
 sjme_errorCode sjme_nvm_task_frameStackTop(
@@ -1133,6 +1225,8 @@ sjme_errorCode sjme_nvm_task_frameStackTop(
  * is @c -1 then this will wait forever.
  * @param value The condition parameter, this may be anything. 
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT If the timeout is negative.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments.
  * @since 2025/10/02
  */
 sjme_errorCode sjme_nvm_task_frameWaitFor(
@@ -1147,6 +1241,7 @@ sjme_errorCode sjme_nvm_task_frameWaitFor(
  * 
  * @param inThread The thread to print the trace for.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/02/16
  */
 sjme_errorCode sjme_nvm_task_stackTraceThread(
@@ -1159,6 +1254,8 @@ sjme_errorCode sjme_nvm_task_stackTraceThread(
  * @param contextThread The context thread.
  * @param inThrowable The throwable to print the trace for.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_CLASS_CAST ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/07/05
  */
 sjme_errorCode sjme_nvm_task_stackTraceThrowable(
@@ -1171,6 +1268,7 @@ sjme_errorCode sjme_nvm_task_stackTraceThrowable(
  * @param inTask The task to enter main for.
  * @param outThread The optional output thread.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/07/15
  */
 sjme_errorCode sjme_nvm_task_taskEnterMain(
@@ -1198,6 +1296,7 @@ sjme_errorCode sjme_nvm_task_taskNew(
  * @param inState The task to delete from.
  * @param inThread The thread to delete from the schedule.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/29
  */
 sjme_errorCode sjme_nvm_task_taskScheduleDelete(
@@ -1210,6 +1309,7 @@ sjme_errorCode sjme_nvm_task_taskScheduleDelete(
  * @param inState The virtual machine state.
  * @param inThread The thread to schedule.
  * @return Any resultant error.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/01/06
  */
 sjme_errorCode sjme_nvm_task_taskScheduleIn(
@@ -1223,6 +1323,7 @@ sjme_errorCode sjme_nvm_task_taskScheduleIn(
  * @param runThread The resultant thread.
  * @param isTerminated Is the virtual machine terminated?
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/29
  */
 sjme_errorCode sjme_nvm_task_taskScheduleNext(
@@ -1239,6 +1340,8 @@ sjme_errorCode sjme_nvm_task_taskScheduleNext(
  * @param msResting The time to spend resting at the minimum, if zero then
  * this is just a yield and the thread will wake back up as soon as possible.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/06/29
  */
 sjme_errorCode sjme_nvm_task_taskScheduleOut(
@@ -1269,6 +1372,8 @@ sjme_errorCode sjme_nvm_task_taskScheduleYes(
  * @param message The message to use for the message.
  * @param ... Any formatted parameters to the message.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT If the common class is not a throwable.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments.
  * @since 2025/09/06
  */
 sjme_errorCode sjme_nvm_task_threadEmit(
@@ -1277,6 +1382,47 @@ sjme_errorCode sjme_nvm_task_threadEmit(
 	sjme_attrInNullable sjme_jthrowable cause,
 	sjme_attrInNullable sjme_attrFormatArg sjme_lpcstr message,
 	...) sjme_attrFormatOuter(3, 4);
+	
+/**
+ * Emits an exception with the given message.
+ * 
+ * @param inThread The thread to emit within.
+ * @param errorCode The error code to emit.
+ * @param cause The cause of this exception, this is optional.
+ * @param message The message to use for the message.
+ * @param ... Any formatted parameters to the message.
+ * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT If the common class is not a throwable.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments.
+ * @since 2025/09/06
+ */
+sjme_errorCode sjme_nvm_task_threadEmitE(
+	sjme_attrInNotNull sjme_nvm_thread inThread,
+	sjme_attrInValue sjme_errorCode errorCode,
+	sjme_attrInNullable sjme_jthrowable cause,
+	sjme_attrInNullable sjme_attrFormatArg sjme_lpcstr message,
+	...) sjme_attrFormatOuter(3, 4);
+	
+/**
+ * Emits an exception with the given message.
+ * 
+ * @param inThread The thread to emit within.
+ * @param errorCode The error code to emit.
+ * @param cause The cause of this exception, this is optional.
+ * @param message The message to use for the message.
+ * @param args Any formatted parameters to the message.
+ * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT If the error does not map to a common
+ * class.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments.
+ * @since 2026/10/25
+ */
+sjme_errorCode sjme_nvm_task_threadEmitEV(
+	sjme_attrInNotNull sjme_nvm_thread inThread,
+	sjme_attrInValue sjme_errorCode errorCode,
+	sjme_attrInNullable sjme_jthrowable cause,
+	sjme_attrInNullable sjme_attrFormatArg sjme_lpcstr message,
+	va_list args);
 
 /**
  * Emits an exception with the given message.
@@ -1287,6 +1433,8 @@ sjme_errorCode sjme_nvm_task_threadEmit(
  * @param message The message to use for the message.
  * @param args Any formatted parameters to the message.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT If the common class is not a throwable.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments.
  * @since 2026/01/11
  */
 sjme_errorCode sjme_nvm_task_threadEmitV(
@@ -1306,6 +1454,15 @@ sjme_errorCode sjme_nvm_task_threadEmitV(
  * @param argC The argument count.
  * @param argV Argument values to the call.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_ARGUMENT_COUNT_MISMATCH ...?
+ * @throws SJME_ERROR_ARGUMENT_TYPE_MISMATCH ...?
+ * @throws SJME_ERROR_CLASS_CHANGED ...?
+ * @throws SJME_ERROR_ILLEGAL_STATE ...?
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_INVALID_THREAD_STATE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_PURE_VIRTUAL_CALL ...?
+ * @throws SJME_ERROR_UNBOUND_METHOD ...?
  * @since 2024/10/19
  */
 sjme_errorCode sjme_nvm_task_threadEnter(
@@ -1329,6 +1486,9 @@ sjme_errorCode sjme_nvm_task_threadEnter(
  * @param argC The argument count.
  * @param argV Argument values to the call.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_ILLEGAL_STATE ...?
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/10/19
  */
 sjme_errorCode sjme_nvm_task_threadEnterA(
@@ -1354,6 +1514,8 @@ sjme_errorCode sjme_nvm_task_threadEnterA(
  * @param argC The argument count.
  * @param argV Argument values to the call.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/10/19
  */
 sjme_errorCode sjme_nvm_task_threadEnterC(
@@ -1374,6 +1536,7 @@ sjme_errorCode sjme_nvm_task_threadEnterC(
  * @param inThread The thread to get the next frame for.
  * @param outFrame The resultant frame.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/01/04
  */
 sjme_errorCode sjme_nvm_task_threadFrameNext(
@@ -1387,6 +1550,8 @@ sjme_errorCode sjme_nvm_task_threadFrameNext(
  * @param inThread The thread to be initialized.
  * @param threadName The name of the new thread.
  * @return On any errors, if any.
+ * @throws SJME_ERROR_INVALID_THREAD_STATE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2026/10/05
  */
 sjme_errorCode sjme_nvm_task_threadInit(
@@ -1399,6 +1564,7 @@ sjme_errorCode sjme_nvm_task_threadInit(
  * 
  * @param inThread The thread to interrupt.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/10/02
  */
 sjme_errorCode sjme_nvm_task_threadInterrupt(
@@ -1411,7 +1577,9 @@ sjme_errorCode sjme_nvm_task_threadInterrupt(
  * @param inThread The thread to check if interrupted.
  * @param clear If the interrupt signal should be cleared.
  * @return Any resultant error, if any, interrupted threads
- * will be @link SJME_ERROR_INTERRUPTED.
+ * will be @link SJME_ERROR_INTERRUPTED @endlink.
+ * @throws SJME_ERROR_INTERRUPTED If this thread was interrupted.
+ * @throws SJME_ERROR_NULL_ARGUMENTS On null arguments.
  * @since 2025/10/02
  */
 sjme_errorCode sjme_nvm_task_threadInterruptCheck(
@@ -1423,6 +1591,9 @@ sjme_errorCode sjme_nvm_task_threadInterruptCheck(
  * 
  * @param inThread The thread which is leaving a thread.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_THREAD_STATE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_UNCAUGHT_EXCEPTION ...?
  * @since 2025/02/24
  */
 sjme_errorCode sjme_nvm_task_threadLeave(
@@ -1436,20 +1607,26 @@ sjme_errorCode sjme_nvm_task_threadLeave(
  * @param threadName The name of the new thread.
  * @param isMain Is this the main thread? If a main thread already exists
  * then this parameter will have no effect.
+ * @param isCallback Is this a callback thread?
  * @return On any errors, if any.
+ * @throws SJME_ERROR_INVALID_THREAD_STATE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/10/15
  */
 sjme_errorCode sjme_nvm_task_threadNew(
 	sjme_attrInNotNull sjme_nvm_task inTask,
 	sjme_attrOutNotNull sjme_nvm_thread* outThread,
 	sjme_attrInNotNull sjme_lpcstr threadName,
-	sjme_attrInValue sjme_jboolean isMain);
+	sjme_attrInValue sjme_jboolean isMain,
+	sjme_attrInValue sjme_jboolean isCallback);
 
 /**
  * Starts the specified thread.
  * 
  * @param inThread The thread to start. 
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_THREAD_STATE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/10/15
  */
 sjme_errorCode sjme_nvm_task_threadStart(
@@ -1465,6 +1642,8 @@ sjme_errorCode sjme_nvm_task_threadStart(
  * @param refString The referring string pool string, if applicable.
  * @param inSeq The input sequence.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/01/25
  */
 sjme_errorCode sjme_nvm_task_threadStringValueOfCS(
@@ -1482,6 +1661,7 @@ sjme_errorCode sjme_nvm_task_threadStringValueOfCS(
  * @param outString The resultant string object.
  * @param inPool The pooled string to load.
  * @return Any resultant error.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2025/01/11
  */
 sjme_errorCode sjme_nvm_task_threadStringValueOfP(
@@ -1533,6 +1713,10 @@ sjme_errorCode sjme_nvm_task_threadStringValueOfUtf(
 /** Thread classloader. */
 #define SJME_T_CL(thread) \
 	(sjme_atomic_g(sjme_nvm_task, &(thread)->inTask)->classLoader)
+	
+/** Class info. */
+#define SJME_CL_I(classy) \
+	(sjme_atomic_g(sjme_nvm_class_info, &(classy)->info))
 	
 /*--------------------------------------------------------------------------*/
 

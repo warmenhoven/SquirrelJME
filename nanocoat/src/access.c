@@ -15,6 +15,7 @@ sjme_errorCode sjme_nvm_access_checkCompatibleField(
 	sjme_attrInNotNull sjme_jvalueTyped* checkValue)
 {
 	sjme_errorCode error;
+	sjme_jclass objectType, checkClass;
 	
 	if (contextThread == NULL || fieldId == NULL || checkValue == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
@@ -30,11 +31,15 @@ sjme_errorCode sjme_nvm_access_checkCompatibleField(
 		if (checkValue->v.l == NULL)
 			return SJME_ERROR_NONE;
 		
+		objectType = sjme_atomic_g(sjme_jclass, &fieldId->objectType);
+		checkClass = sjme_atomic_g(sjme_jclass, &checkValue->v.l->isClass);
+		if (objectType == NULL || checkClass == NULL)
+			return sjme_error_vmError(contextThread, SJME_ERROR_OBJECT_GONE);
+		
 		/* If this is not assignable, then something is wrong. */
 		if (sjme_error_is(error = sjme_nvm_vmClass_isAssignableFrom(
-			contextThread,
-			sjme_atomic_g(sjme_jclass, &fieldId->objectType),
-			sjme_atomic_g(sjme_jclass, &checkValue->v.l->isClass))))
+			contextThread, objectType,
+			checkClass)))
 		{
 			if (error == SJME_ERROR_CLASS_CAST)
 				return SJME_ERROR_CLASS_CHANGED;
@@ -73,7 +78,7 @@ sjme_errorCode sjme_nvm_access_checkCToE(
 	/* Class is public? It is always accessible and all members are */
 	/* visible at the public level provided the individual members are */
 	/* visible themselves. */
-	if (SJME_NVM_ACC_IS(toClass->info->flags, PUBLIC))
+	if (SJME_NVM_ACC_IS(SJME_CL_I(toClass)->flags, PUBLIC))
 		return SJME_ERROR_NONE;
 
 	/* Otherwise, the class is package private, even if the members are */
@@ -81,8 +86,8 @@ sjme_errorCode sjme_nvm_access_checkCToE(
 	/* be in the same package. */
 	/* This is so that you cannot access public static methods in a class */
 	/* which is package private. */
-	if (sjme_charSeq_equalsR(fromClass->info->inPackage->seq,
-		toClass->info->inPackage->seq))
+	if (sjme_charSeq_equalsR(SJME_CL_I(fromClass)->inPackage->seq,
+		SJME_CL_I(toClass)->inPackage->seq))
 		return SJME_ERROR_NONE;
 
 	/* Otherwise, access is denied. */
@@ -168,8 +173,8 @@ sjme_errorCode sjme_nvm_access_checkEToE(
 			return SJME_ERROR_MEMBER_ACCESS_DENIED;
 		
 		/* Must be in the same package. */
-		if (sjme_charSeq_equalsR(fromClass->info->inPackage->seq,
-			toClass->info->inPackage->seq))
+		if (sjme_charSeq_equalsR(SJME_CL_I(fromClass)->inPackage->seq,
+			SJME_CL_I(toClass)->inPackage->seq))
 			return SJME_ERROR_NONE;
 	}
 

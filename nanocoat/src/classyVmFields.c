@@ -160,6 +160,10 @@ static sjme_errorCode sjme_nvm_vmField_operate_SJME_VLG_(
 	{
 		case SJME_NVM_VMFIELD_VAR_JVALUE_P:
 		case SJME_NVM_VMFIELD_VAR_JVALUE_TYPED_P:
+			/* Primitive not passed for non-object? */
+			if (type != SJME_JAVA_TYPE_ID_OBJECT && prim == NULL)
+				return SJME_ERROR_NULL_ARGUMENTS;
+			
 			/* Need to read in? */
 			if (valueP == NULL)
 			{
@@ -182,15 +186,15 @@ static sjme_errorCode sjme_nvm_vmField_operate_SJME_VLG_(
 			switch (type)
 			{
 				case SJME_BASIC_TYPE_ID_BOOLEAN:
-					valueP->i = (prim->z ? 1 : 0);
+					valueP->i = (prim->z ? 1 : 0); /* NOLINT */
 					break;
 
 				case SJME_BASIC_TYPE_ID_BYTE:
-					valueP->i = sjme_util_byteToInt(prim->b);
+					valueP->i = sjme_util_byteToInt(prim->b); /* NOLINT */
 					break;
 
 				case SJME_BASIC_TYPE_ID_SHORT:
-					valueP->i = sjme_util_shortToInt(prim->s);
+					valueP->i = sjme_util_shortToInt(prim->s); /* NOLINT */
 					break;
 
 				case SJME_BASIC_TYPE_ID_CHARACTER:
@@ -198,19 +202,19 @@ static sjme_errorCode sjme_nvm_vmField_operate_SJME_VLG_(
 					break;
 
 				case SJME_JAVA_TYPE_ID_INTEGER:
-					valueP->i = prim->i;
+					valueP->i = prim->i; /* NOLINT */
 					break;
 
 				case SJME_JAVA_TYPE_ID_LONG:
-					valueP->j = prim->j;
+					valueP->j = prim->j; /* NOLINT */
 					break;
 
 				case SJME_JAVA_TYPE_ID_FLOAT:
-					valueP->f.bits = prim->f.bits;
+					valueP->f.bits = prim->f.bits; /* NOLINT */
 					break;
 
 				case SJME_JAVA_TYPE_ID_DOUBLE:
-					valueP->d.bits = prim->d.bits;
+					valueP->d.bits = prim->d.bits; /* NOLINT */
 					break;
 				
 				case SJME_JAVA_TYPE_ID_OBJECT:
@@ -469,7 +473,7 @@ sjme_errorCode sjme_nvm_vmField_cisGet(
 	sjme_nvm_vmField_decomposeValue(srcValue, srcType);
 	
 	/* Operate. */
-	sjme_nvm_vmField_operate(SJME_VLG_, NULL);
+	sjme_nvm_vmField_operate(SJME_VLG_, NULL); /* NOLINT */
 	
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -498,7 +502,7 @@ sjme_errorCode sjme_nvm_vmField_cisGetS(
 	sjme_nvm_vmField_decomposeValueSet(srcSet, getIndex, const);
 	
 	/* Operate. */
-	sjme_nvm_vmField_operate(SJME_VLG_, NULL);
+	sjme_nvm_vmField_operate(SJME_VLG_, NULL); /* NOLINT */
 	
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -527,7 +531,7 @@ sjme_errorCode sjme_nvm_vmField_cisSet(
 	sjme_nvm_vmField_decomposeValue(destValue, destType);
 	
 	/* Operate. */
-	sjme_nvm_vmField_operate(SJME_VLS_, commit);
+	sjme_nvm_vmField_operate(SJME_VLS_, commit); /* NOLINT */
 	
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -556,7 +560,7 @@ sjme_errorCode sjme_nvm_vmField_cisSetS(
 	sjme_nvm_vmField_decomposeValueSet(destSet, setIndex, );
 	
 	/* Operate. */
-	sjme_nvm_vmField_operate(SJME_VLS_, commit);
+	sjme_nvm_vmField_operate(SJME_VLS_, commit); /* NOLINT */
 	
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -667,7 +671,7 @@ sjme_errorCode sjme_nvm_vmField_sizeValueSet(
 	sjme_attrInValue sjme_basicTypeId type,
 	sjme_attrInPositive sjme_jint length)
 {
-	sjme_jint result;
+	sjme_jint result, baseMul;
 	
 	if (outSize == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
@@ -675,10 +679,18 @@ sjme_errorCode sjme_nvm_vmField_sizeValueSet(
 	if (length < 0 || type < 0 || type >= SJME_NUM_BASIC_TYPE_IDS)
 		return SJME_ERROR_INVALID_ARGUMENT;
 	
-	/* Calculate the size of all values, make sure there is no overflow. */
-	result = (sjme_nvm_typeMul[type] * length);
+	/* Note that objects use a different storage size. */
+	if (type == SJME_JAVA_TYPE_ID_OBJECT)
+		baseMul = sjme_util_sizeToInt(sizeof(sjme_nvm_valueObject));
+	else
+		baseMul = sjme_nvm_typeMul[type];
+	
+	/* Calculate the size of all values. */
+	/* Ensure that there is no overflow. */
+	result = baseMul * length;
 	if (length != 0)
-		if (result <= 0 || (result / sjme_nvm_typeMul[type]) != length)
+		if (result <= 0 || (result / baseMul) != length ||
+			(result % baseMul) != 0)
 			return SJME_ERROR_TOO_LARGE;
 	
 	/* Offset up the base size. */
@@ -737,7 +749,7 @@ sjme_errorCode sjme_nvm_vmField_sourceByIndex(
 
 	/* Find the associated field. */
 	base = atClass->fields[instanceType].base[extendedType];
-	fields = atClass->info->fields;
+	fields = SJME_CL_I(atClass)->fields;
 	for (i = 0, n = fields->length; i < n; i++)
 	{
 		/* Get the method here. */

@@ -641,8 +641,17 @@ typedef enum sjme_errorCode
 	/** Main class is not initialized. */
 	SJME_ERROR_CLASS_NOT_INITIALIZED = -197,
 	
+	/** Value cannot be stored in this array. */
+	SJME_ERROR_ARRAY_STORE = -198,
+	
+	/** The string index is out of bounds. */
+	SJME_ERROR_STRING_INDEX_OUT_OF_BOUNDS = -199,
+	
+	/** Need to recycle. */
+	SJME_ERROR_RECYCLE = -200,
+	
 	/** The number of error codes. */
-	SJME_NUM_ERROR_CODES = -198,
+	SJME_NUM_ERROR_CODES = -201,
 } sjme_errorCode;
 
 /**
@@ -672,7 +681,7 @@ sjme_errorCode sjme_error_alsoV(
 	sjme_errorCode error, ...);
 
 /**
- * The end expression for @link sjme_error_alsoV() .
+ * The end expression for @link sjme_error_alsoV() @endlink .
  * 
  * @return The ending sequence for error codes.
  * @since 2024/01/18 
@@ -687,12 +696,25 @@ sjme_errorCode sjme_error_alsoVEnd(void);
  */
 sjme_jboolean sjme_error_is(
 	sjme_errorCode error);
+	
+/**
+ * Checks if this error is one of the given errors.
+ * 
+ * @param error The error to check.
+ * @param ... Is this error one of these? Zero terminates the list.
+ * @return If this error matches any of the given errors.
+ * @since 2026/10/25
+ */
+sjme_jboolean sjme_error_isOneOf(
+	sjme_errorCode error,
+	...);
 
 /**
  * Determines the default error code to use.
  *
  * @param error The error code.
  * @return Either @c error or a default error.
+ * @throws SJME_ERROR_UNKNOWN ...?
  * @since 2023/12/29
  */
 sjme_errorCode sjme_error_default(
@@ -702,8 +724,12 @@ sjme_errorCode sjme_error_default(
  * Determines the default error code to use.
  *
  * @param error The error code.
- * @param otherwise The other error code rather than @link SJME_ERROR_UNKNOWN.
+ * @param otherwise The other error code rather
+ * than @link SJME_ERROR_UNKNOWN @endlink.
  * @return Either @c error or @c otherwise if the former is not valid.
+ * @throws SJME_ERROR_UNKNOWN ...?
+ * @throws SJME_ERROR_UNKNOWN_NEGATIVE ...?
+ * @throws SJME_ERROR_UNKNOWN_ONE ...?
  * @since 2023/12/29
  */
 sjme_errorCode sjme_error_defaultOr(

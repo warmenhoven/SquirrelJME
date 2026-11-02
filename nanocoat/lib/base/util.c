@@ -62,6 +62,83 @@ sjme_jint sjme_compare_null(
 	return 1;
 }
 
+sjme_intMax sjme_lpcstoimax(sjme_attrInNotNull sjme_lpcstr str,
+	sjme_attrOutNullable sjme_lpcstr* endP,
+	sjme_attrInRange(2, 36) sjme_jint base)
+{
+	sjme_intMax result, add, mul, div;
+	sjme_cchar c;
+	sjme_jboolean negate;
+
+	/* Invalid inputs? */
+	if (str == NULL || base < 2 || base > 36)
+		return INTMAX_MIN;
+
+	/* Should this be negated? */
+	if ((*str) != '-')
+		negate = SJME_JNI_FALSE;
+	else
+	{
+		str++;
+		negate = SJME_JNI_TRUE;
+	}
+
+	/* Set base result. */
+	result = 0;
+
+	/* Parse values until an invalid character is hit. */
+	for (;;)
+	{
+		/* Determine the base add value. */
+		c = (*str);
+		if (c >= '0' && c <= '9')
+			add = c - '0';
+		else if (c >= 'a' && c <= 'z')
+			add = (c - 'a') + 10;
+		else if (c >= 'A' && c <= 'Z')
+			add = (c - 'A') + 10;
+
+		/* If none were met, this is an invalid base. */
+		else
+			break;
+
+		/* Is the base out of range? */
+		if (add < 0 || add >= base)
+			break;
+
+		/* Multiply by the base, then divide again to check for overflow. */
+		mul = result * base;
+		div = mul / base;
+
+		/* If these two values are different, we did overflow. */
+		if (result != div)
+			return INTMAX_MIN;
+
+		/* Add in the decoded digit. */
+		mul += add;
+
+		/* Divide again to check if we overflowed. */
+		div = mul / base;
+		if (result != div)
+			return INTMAX_MIN;
+
+		/* Did not overflow, so use the new value. */
+		result = mul;
+
+		/* Move to the next character. */
+		str++;
+	}
+
+	/* If the end was desired, return it. */
+	if (endP != NULL)
+		*endP = str;
+
+	/* Negate the final value? */
+	if (negate)
+		return -result;
+	return result;
+}
+
 sjme_lpcwstr sjme_lpwcschr(sjme_lpcwstr within, sjme_jchar what)
 {
 	if (within == NULL)
@@ -729,7 +806,8 @@ sjme_jlong sjme_swap_long(
 sjme_juint sjme_swap_uint(
 	sjme_attrInValue sjme_juint in)
 {
-#if SJME_CONFIG_HAS_GCC_BUILTIN(bswap32)
+#if SJME_CONFIG_HAS_GCC_BUILTIN(bswap32) && \
+	!defined(SJME_CONFIG_HAS_OS_BAREMETAL)
 	return __builtin_bswap32(in);
 #else
 	// 0xAABBCCDD -> 0xBBAADDCC
@@ -743,7 +821,8 @@ sjme_juint sjme_swap_uint(
 sjme_jchar sjme_swap_ushort(
 	sjme_attrInValue sjme_jchar in)
 {
-#if SJME_CONFIG_HAS_GCC_BUILTIN(bswap16)
+#if SJME_CONFIG_HAS_GCC_BUILTIN(bswap16) && \
+	!defined(SJME_CONFIG_HAS_OS_BAREMETAL)
 	return __builtin_bswap16(in);
 #else
 	return ((in >> 8) | (in << 8));
@@ -839,7 +918,8 @@ sjme_jint sjme_util_byteToInt(
 sjme_juint sjme_util_intBitCountU(
 	sjme_attrInValue sjme_juint v)
 {
-#if SJME_CONFIG_HAS_GCC_BUILTIN(popcount)
+#if SJME_CONFIG_HAS_GCC_BUILTIN(popcount) && \
+	!defined(SJME_CONFIG_HAS_OS_BAREMETAL)
 	return __builtin_popcount(v);
 #else
 	/* Henry S. Warren, Jr. (2013). Hacker's Delight (2nd Edition). */
@@ -972,8 +1052,8 @@ sjme_jint sjme_util_intOverShift(
 {
 	/* Shifting to the right all the way, smears the highest bit. */
 	if (sh <= -32)
-		return ((v & INT32_C(0x80000000)) ?
-			INT32_C(0xFFFFFFFF) : INT32_C(0));
+		return (((v & UINT32_C(0x80000000)) != 0U) ?
+			INT32_C(-1) : INT32_C(0));
 
 	/* Shifting all the way to the left results in zero. */
 	if (sh >= 32)
@@ -995,7 +1075,7 @@ sjme_juint sjme_util_intOverShiftU(
 
 	/* Shifting more than this always results in zero. */
 	if (sh <= -32 || sh >= 32)
-		return 0;
+		return 0U;
 	
 	/* Shift by zero does nothing. */
 	else if (sh == 0)
@@ -1014,7 +1094,8 @@ sjme_jint sjme_util_intReverse(sjme_jint v)
 
 sjme_juint sjme_util_intReverseU(sjme_juint v)
 {
-#if SJME_CONFIG_HAS_GCC_BUILTIN(bitreverse32)
+#if SJME_CONFIG_HAS_GCC_BUILTIN(bitreverse32) && \
+	!defined(SJME_CONFIG_HAS_OS_BAREMETAL)
 	return __builtin_bitreverse32(v);
 #else
 	/* Henry S. Warren, Jr. (2013). Hacker's Delight (2nd Edition). */
@@ -1069,7 +1150,8 @@ sjme_errorCode sjme_util_intToBinary(
 sjme_juint sjme_util_intZeroesLeadingU(
 	sjme_attrInValue sjme_juint v)
 {
-#if SJME_CONFIG_HAS_GCC_BUILTIN(clz)
+#if SJME_CONFIG_HAS_GCC_BUILTIN(clz) && \
+	!defined(SJME_CONFIG_HAS_OS_BAREMETAL)
 	if (v == 0)
 		return 32;
 	return __builtin_clz(v);
@@ -1089,7 +1171,8 @@ sjme_juint sjme_util_intZeroesLeadingU(
 sjme_juint sjme_util_intZeroesTrailingU(
 	sjme_attrInValue sjme_juint v)
 {
-#if SJME_CONFIG_HAS_GCC_BUILTIN(ctz)
+#if SJME_CONFIG_HAS_GCC_BUILTIN(ctz) && \
+	!defined(SJME_CONFIG_HAS_OS_BAREMETAL)
 	if (v == 0)
 		return 32;
 	return __builtin_ctz(v);
@@ -1223,6 +1306,19 @@ sjme_jint sjme_util_shortToInt(
 
 #if !defined(SJME_CONFIG_SIZEOF_SIZE_T) || SJME_CONFIG_SIZEOF_SIZE_T != 4
 
+size_t sjme_util_intToSize(sjme_jint in)
+{
+#if defined(SJME_CONFIG_SIZEOF_SIZE_T) && 4 <= SJME_CONFIG_SIZEOF_SIZE_T
+	if (in < 0)
+		return 0;
+	return (size_t)in;
+#else
+	if (sjme_noLint(sizeof(sjme_jint) < sizeof(size_t)) || in < SIZE_MAX)
+		return (size_t)in;
+	return SIZE_MAX;
+#endif
+}
+
 sjme_jint sjme_util_sizeToInt(size_t in)
 {
 #if defined(SJME_CONFIG_HAS_SDCC)
@@ -1247,4 +1343,3 @@ sjme_jint sjme_util_sizeToInt(size_t in)
 }
 
 #endif
-

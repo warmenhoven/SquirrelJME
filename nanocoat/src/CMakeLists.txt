@@ -16,12 +16,17 @@ squirreljme_multilib_add_library(Core
 	bytecodeSlow.c
 	bytecodeSlowConst.c
 	bytecodeSlowFlow.c
+	bytecodeSlowInvoke.c
 	bytecodeSlowLocal.c
 	bytecodeSlowMath.c
 	bytecodeSlowRef.c
 	bytecodeSlowStack.c
 	classy.c
+	classyAnnotation.c
+	classyMethod.c
+	classyUtil.c
 	classyVm.c
+	classyVmAssign.c
 	classyVmClass.c
 	classyVmFields.c
 	classyVmMethods.c
@@ -29,6 +34,9 @@ squirreljme_multilib_add_library(Core
 	descriptor.c
 	gfx.c
 	instance.c
+	instanceFieldAccess.c
+	instanceInspect.c
+	instanceOther.c
 	instanceProxy.c
 	jdwp.c
 	jdwpComm.c
@@ -69,8 +77,11 @@ squirreljme_multilib_add_library(Core
 	stringPool.c
 	task.c
 	taskFrame.c
+	taskFrameExcept.c
+	taskSchedule.c
 	taskStore.c
 	taskThread.c
+	taskThreadExcept.c
 	tread.c
 	vmConfig.c
 	walk.c

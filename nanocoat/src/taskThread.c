@@ -15,6 +15,7 @@
 #include "sjme/debug.h"
 #include "sjme/nvm/nvm.h"
 #include "sjme/nvm/cleanup.h"
+#include "sjme/nvm/instanceInspect.h"
 #include "sjme/nvm/taskStore.h"
 
 static sjme_errorCode sjme_nvm_task_stackReframe(
@@ -41,177 +42,6 @@ static sjme_errorCode sjme_nvm_task_stackReframe(
 
 	/* Success! */
 	return SJME_ERROR_NONE;
-}
-
-sjme_errorCode sjme_nvm_task_threadEmit(
-	sjme_attrInNotNull sjme_nvm_thread inThread,
-	sjme_attrInValue sjme_nvm_task_commonClassId commonClass,
-	sjme_attrInNullable sjme_jthrowable cause,
-	sjme_attrInNullable sjme_attrFormatArg sjme_lpcstr message,
-	...)
-{
-	sjme_errorCode error;
-	va_list args;
-	
-	if (inThread == NULL)
-		return SJME_ERROR_NULL_ARGUMENTS;
-	
-	/* Start arguments. */
-	va_start(args, message);
-	
-	/* Forward. */
-	error = sjme_nvm_task_threadEmitV(inThread, commonClass, cause,
-		message, args);
-	
-	/* End. */
-	va_end(args);
-	
-	/* Return the result of the forward. */
-	return error;
-}
-
-sjme_errorCode sjme_nvm_task_threadEmitV(
-	sjme_attrInNotNull sjme_nvm_thread inThread,
-	sjme_attrInValue sjme_nvm_task_commonClassId commonClass,
-	sjme_attrInNullable sjme_jthrowable cause,
-	sjme_attrInNullable sjme_attrFormatArg sjme_lpcstr message,
-	sjme_attrInValue va_list args)
-{
-#define BUF_SIZE 256
-	sjme_errorCode error;
-	sjme_jclass tossClass, throwableClass;
-	sjme_jthrowable toss, oldTossed;
-	sjme_jfieldID initCauseID, causeID;
-	sjme_nvm_value* accessor;
-	sjme_jvalueTyped argV[1];
-	sjme_cchar buf[BUF_SIZE];
-	va_list copy;
-
-	/* TODO FIXME: Optimize/shrink for SDCC. */
-	
-	if (inThread == NULL)
-		return SJME_ERROR_NULL_ARGUMENTS;
-
-	/* Locate the class to toss. */
-	tossClass = NULL;
-	if (sjme_error_is(error = sjme_nvm_task_commonClass(inThread,
-		commonClass, &tossClass, SJME_JNI_TRUE)) || tossClass == NULL)
-		return sjme_error_default(error);
-
-	/* Allocate new instance of object. */
-	toss = NULL;
-	if (sjme_error_is(error = sjme_nvm_instance_objectNew(inThread,
-		-1, SJME_NVM_STRUCT_OBJECT_INSTANCE,
-		SJME_AS_JOBJECTP(&toss), tossClass)) || toss == NULL)
-		return sjme_error_default(error);
-
-	/* Set as tossed! */
-	oldTossed = NULL;
-	if (!sjme_atomic_cs(sjme_jobject, &inThread->tossed,
-		NULL, SJME_AS_JOBJECT(toss)))
-	{
-		/* Get the old tossed to print it out. */
-		oldTossed = SJME_AS_JTHROWABLE(
-			sjme_atomic_g(sjme_jobject, &inThread->tossed));
-
-		/* Print it out, assuming it is not our cause. */
-		if (oldTossed != cause)
-		{
-			sjme_message("DROPPING DOUBLE TOSSED EXCEPTION:");
-			if (sjme_error_is(error = sjme_nvm_task_stackTraceThrowable(
-				inThread, SJME_AS_JTHROWABLE(oldTossed))))
-				return sjme_error_default(error);
-		}
-
-		/* Set new value. */
-		sjme_atomic_s(sjme_jobject, &inThread->tossed,
-			SJME_AS_JOBJECT(toss));
-
-		/* Count down the old toss since it is no longer stored, if it */
-		/* is not our cause. */
-		if (oldTossed != cause)
-		{
-			if (sjme_error_is(error = sjme_nvm_instance_countDown(
-				SJME_AS_JOBJECT(oldTossed))))
-				return sjme_error_default(error);
-		}
-	}
-
-	/* Set level so we can run the constructor. */
-	sjme_atomic_s(sjme_jint, &inThread->tossedLevel, inThread->numFrames);
-
-	/* Build message string. */
-	va_copy(copy, args);
-
-	memset(buf, 0, sizeof(buf));
-	vsnprintf(buf, BUF_SIZE - 1, message, copy);
-	buf[BUF_SIZE - 1] = '\0';
-	
-	va_end(copy);
-
-	/* Setup string argument. */
-	memset(&argV, 0, sizeof(argV));
-	argV[0].t = SJME_JAVA_TYPE_ID_OBJECT;
-	if (sjme_error_is(error = sjme_nvm_task_threadStringValueOfUtf(
-		inThread, SJME_AS_JSTRINGP(&argV[0].v.l), SJME_JNI_FALSE, buf)))
-		return sjme_error_default(error);
-
-	/* Initialize exception. */
-	if (sjme_error_is(error = sjme_nvm_instance_defaultInit(inThread,
-		NULL, SJME_AS_JOBJECT(toss),
-		"(Ljava/lang/String;)V", 1, argV)))
-		return sjme_error_default(error);
-
-	/* Count up once as it is now stored in tossed. */
-	if (sjme_error_is(error = sjme_nvm_instance_countUp(
-		SJME_AS_JOBJECT(toss))))
-		return sjme_error_default(error);
-
-	/* Initialize cause, if there is one to set. */
-	if (cause != NULL)
-	{
-		/* Locate the throwable class. */
-		throwableClass = NULL;
-		if (sjme_error_is(error = sjme_nvm_task_commonClass(inThread,
-			SJME_NVM_COMMON_THROWABLE, &throwableClass,
-			SJME_JNI_TRUE)))
-			return sjme_error_default(error);
-
-		/* Lookup initCause to flag it on. */
-		initCauseID = NULL;
-		if (sjme_error_is(error = sjme_nvm_vmField_idByNameTypeU(
-			throwableClass, inThread, SJME_NVM_CLASS_MEMBER_INSTANCE,
-			SJME_JNI_TRUE,
-			"_initCause", "Z",
-			&initCauseID)) || initCauseID == NULL)
-			return sjme_error_default(error);
-
-		/* Lookup cause, to set it. */
-		causeID = NULL;
-		if (sjme_error_is(error = sjme_nvm_vmField_idByNameTypeU(
-			throwableClass, inThread, SJME_NVM_CLASS_MEMBER_INSTANCE,
-			SJME_JNI_TRUE,
-			"_cause", "Ljava/lang/Throwable;",
-			&causeID)) || causeID == NULL)
-			return sjme_error_default(error);
-
-		/* Flag cause as initialized. */
-		accessor = sjme_nvm_instance_fieldAccessor(
-			SJME_AS_JOBJECT(toss), initCauseID);
-		accessor->v.z = SJME_JNI_TRUE;
-
-		/* Set actual cause now, and its check value directly. */
-		accessor = sjme_nvm_instance_fieldAccessor(
-			SJME_AS_JOBJECT(toss), causeID);
-		if (sjme_error_is(error = sjme_nvm_vmField_cisSet(
-			accessor, causeID->info->basicType,
-			NULL, SJME_VLS_JOBJECT(toss))))
-			return sjme_error_vmError(inThread, error);
-	}
-
-	/* Success! */
-	return SJME_ERROR_NONE;
-#undef BUF_SIZE
 }
 
 sjme_errorCode sjme_nvm_task_threadEnter(
@@ -639,15 +469,16 @@ sjme_errorCode sjme_nvm_task_threadInit(
 	sjme_atomic_s(sjme_jclass, &inThread->object.isClass,
 		sjme_weakUp(threadType));
 
-	/* All threads have an initial frame within java.lang.__Start__. */
+	/* Only main threads have an initial frame within java.lang.__Start__. */
 	firstFrame = NULL;
-	if (sjme_error_is(error = sjme_nvm_task_threadEnterA(
-		inThread, &firstFrame,
-		"java/lang/__Start__",
-		SJME_NVM_CLASS_MEMBER_STATIC,
-		"__main", "()V",
-		0, NULL)))
-		goto fail_enterFrame;
+	if (inThread->isMain)
+		if (sjme_error_is(error = sjme_nvm_task_threadEnterA(
+			inThread, &firstFrame,
+			"java/lang/__Start__",
+			SJME_NVM_CLASS_MEMBER_STATIC,
+			"__main", "()V",
+			0, NULL)) || firstFrame == NULL)
+			goto fail_enterFrame;
 
 	/* Count up. */
 	if (sjme_error_is(error = sjme_nvm_instance_countUp(
@@ -662,9 +493,13 @@ sjme_errorCode sjme_nvm_task_threadInit(
 	/* an add because a thread gets daemon being set later. */
 	sjme_atomic_ga(sjme_jint,
 		&inTask->numThreads[SJME_NVM_THREAD_COUNT_ALL], 1);
-	sjme_atomic_ga(sjme_jint,
-		&inTask->numThreads[SJME_NVM_THREAD_COUNT_NORMAL], 1);
-
+	
+	/* Unless said thread is a callback thread. */
+	if (sjme_atomic_g(sjme_nvm_thread_startType, &inThread->start) !=
+		SJME_NVM_THREAD_START_CALLBACK)
+		sjme_atomic_ga(sjme_jint,
+			&inTask->numThreads[SJME_NVM_THREAD_COUNT_NORMAL], 1);
+	
 	/* The main thread gets flagged as the main thread. */
 	if (inThread->isMain)
 	{
@@ -928,7 +763,8 @@ sjme_errorCode sjme_nvm_task_threadNew(
 	sjme_attrInNotNull sjme_nvm_task inTask,
 	sjme_attrOutNotNull sjme_nvm_thread* outThread,
 	sjme_attrInNotNull sjme_lpcstr threadName,
-	sjme_attrInValue sjme_jboolean isMain)
+	sjme_attrInValue sjme_jboolean isMain,
+	sjme_attrInValue sjme_jboolean isCallback)
 {
 	sjme_errorCode error;
 	sjme_nvm_thread result;
@@ -951,6 +787,17 @@ sjme_errorCode sjme_nvm_task_threadNew(
 
 	/* Set main thread. */
 	result->isMain = isMain;
+	
+	/* Callback thread? */
+	if (isCallback)
+	{
+		/* This is always a daemon thread. */
+		result->flags |= SJME_NVM_THREAD_IS_DAEMON;
+
+		/* This is a callback type thread, it never gets deleted. */
+		sjme_atomic_s(sjme_nvm_thread_startType, &result->start,
+			SJME_NVM_THREAD_START_CALLBACK);
+	}
 
 	/* Call the thread initializer. */
 	if (sjme_error_is(error = sjme_nvm_task_threadInit(inTask,

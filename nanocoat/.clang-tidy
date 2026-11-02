@@ -5,3 +5,162 @@
 # SquirrelJME is under the Mozilla Public License Version 2.0.
 # See license.mkd for licensing and copyright information.
 # ---------------------------------------------------------------------------
+
+Checks: >
+  -*
+  clion-misra-c2012-*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  misc-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -clion-misra-c2012-7-1,
+  -clion-misra-c2012-7-4,
+  -clion-misra-c2012-10-1,
+  -clion-misra-c2012-10-2,
+  -clion-misra-c2012-10-5,
+  -clion-misra-c2012-11-1,
+  -clion-misra-c2012-11-3,
+  -clion-misra-c2012-11-5,
+  -clion-misra-c2012-11-9,
+  -clion-misra-c2012-12-3,
+  -clion-misra-c2012-13-3,
+  -clion-misra-c2012-14-4,
+  -clion-misra-c2012-15-1,
+  -clion-misra-c2012-15-5,
+  -clion-misra-c2012-15-6,
+  -clion-misra-c2012-15-7,
+  -clion-misra-c2012-16-3,
+  -clion-misra-c2012-17-7,
+  -clion-misra-c2012-17-8,
+  -clion-misra-c2012-19-2,
+  -clion-misra-c2012-21-8,
+  -*-braces-around-statements,
+  -*-use-concise-preprocessor-directives,
+  -*-assignment-in-if-condition,
+  -*-isolate-declaration,
+  -*-identifier-length,
+  -*-function-cognitive-complexity,
+  -*-else-after-return,
+  -*-easily-swappable-parameters,
+  -*-redundant-preprocessor,
+  -*-cpp,
+  -*-no-recursion,
+  -*-avoid-unconditional-preprocessor-if,
+  -misc-include-cleaner,
+  -performance-no-int-to-ptr,
+CheckOptions:
+  readability-magic-numbers.IgnoredIntegerValues: >
+    0;
+    1;
+    2;
+    3;
+    4;
+    5;
+    7;
+    8;
+    10;
+    12;
+    15;
+    16;
+    20;
+    24;
+    32;
+    36;
+    48;
+    56;
+    64;
+    45;
+    90;
+    135;
+    180;
+    225;
+    270;
+    315;
+    360;
+    127;
+    128;
+    255;
+    256;
+    512;
+    1024;
+    2048;
+    4096;
+    8192;
+    1048576;
+    65536;
+    0xF;
+    0x0F;
+    0x1F;
+    0x3F;
+    0xC0;
+    0xE0;
+    0xF0;
+    65535;
+    65536;
+    0xFFFF;
+    0xFF000000;
+    0xFFFFFF;
+  bugprone-easily-swappable-parameters.IgnoredParameterNames: >
+    x;y;w;h;
+    bw;bh;
+    sx;sy;sw;sh;
+    dx;dy;dw;dh;
+    x1;y1;z1;
+    x2;y2;z2;
+    x3;y3;z3;
+    x4;y4;z4;
+    nPoints;
+  bugprone-signed-char-misuse.CharTypdefsToIgnore: >
+    sjme_cchar;
+    sjme_jchar;
+  bugprone-unused-return-value.AllowCastToVoid: true
+  bugprone-suspicious-string-compare.StringCompareLikeFunctions: >
+    sjme_string_compareWN;
+    sjme_string_compareN;
+    sjme_lpwcsncmp;
+    sjme_lpwcscmp;
+    sjme_string_compareIN;
+    sjme_lpwcscasecmp;
+    sjme_lpwcsncasecmp;
+    sjme_string_compareWAN;
+    sjme_string_compareIWN;
+    sjme_string_compareIWAN;
+  bugprone-string-constructor.StringNames: >
+    sjme_lpcstr;
+    sjme_lpcwstr;
+    sjme_lpstr;
+    sjme_lpwstr;
+    sjme_charSeq;
+    sjme_charSeq_static;
+  bugprone-unused-return-value.CheckedFunctions: >
+    sjme_error_is;
+    sjme_error_isOneOf;
+  bugprone-assert-side-effect.AssertMacros: >
+    sjme_message;
+    sjme_messageB;
+    sjme_emit;
+    sjme_emitB;
+  bugprone-misplaced-widening-cast.CheckImplicitCasts: true
+  bugprone-assert-side-effect.CheckFunctionCalls: true
+  cppcoreguidelines-narrowing-conversions.PedanticMode: true
+  bugprone-sizeof-expression.WarnOnSizeOfIntegerExpression: true
+  cert-arr39-c.WarnOnSizeOfConstant: true
+  cert-arr39-c.WarnOnSizeOfIntegerExpression: true
+  bugprone-string-constructor.LargeLengthThreshold: 1024
+  bugprone-suspicious-enum-usage.StrictMode: 0
+  cert-oop57-cpp.MemCmpNames: >
+    memcmp;
+  cert-oop57-cpp.MemCpyNames: >
+    memcpy;
+  cert-oop57-cpp.MemSetNames: >
+    memset;
+  cppcoreguidelines-avoid-magic-numbers.IgnorePowersOf2IntegerValues: true
+  misc-include-cleaner.IgnoreHeaders: >
+    sjme/config.h;
+    sjme/stdGone.h;
+  misc-header-include-cycle.IgnoredFilesList: >
+    sjme/config.h;
+    sjme/stdGone.h;

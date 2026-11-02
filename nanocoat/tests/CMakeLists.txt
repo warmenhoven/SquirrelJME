@@ -48,6 +48,12 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/blank.in.h"
 configure_file("${CMAKE_SOURCE_DIR}/cmake/blank.in.h"
 	"${outTestStructH}")
 
+# All of these are generated
+set_property(SOURCE "${outTestProtosH}"
+	PROPERTY GENERATED YES)
+set_property(SOURCE "${outTestStructH}"
+	PROPERTY GENERATED YES)
+
 # Include test header in the prototypes file
 file(APPEND "${outTestProtosH}"
 	"#include \"test.h\"\n")
@@ -56,6 +62,23 @@ file(APPEND "${outTestProtosH}"
 add_library(BasicTestLib OBJECT
 	src/basic.c
 	src/blobs.c
+	src/longsAdd.c
+	src/longsAnd.c
+	src/longsCmp.c
+	src/longsDiv.c
+	src/longsDouble.c
+	src/longsFloat.c
+	src/longsIn.c
+	src/longsInt.c
+	src/longsMul.c
+	src/longsNeg.c
+	src/longsOr.c
+	src/longsRem.c
+	src/longsShl.c
+	src/longsShr.c
+	src/longsSub.c
+	src/longsUshr.c
+	src/longsXor.c
 	src/mock.c
 	src/unit.c
 	${basicTestSources}
@@ -65,6 +88,23 @@ add_library(BasicTestLib OBJECT
 add_library(BasicTestLibPIC OBJECT
 	src/basic.c
 	src/blobs.c
+	src/longsAdd.c
+	src/longsAnd.c
+	src/longsCmp.c
+	src/longsDiv.c
+	src/longsDouble.c
+	src/longsFloat.c
+	src/longsIn.c
+	src/longsInt.c
+	src/longsMul.c
+	src/longsNeg.c
+	src/longsOr.c
+	src/longsRem.c
+	src/longsShl.c
+	src/longsShr.c
+	src/longsSub.c
+	src/longsUshr.c
+	src/longsXor.c
 	src/mock.c
 	src/unit.c
 	${basicTestSources}
@@ -227,6 +267,33 @@ foreach(basicTestSource ${basicTestSources})
 		"{\"${basicTestName}\", ${basicTestName}},\n")
 endforeach()
 
+# Sets test properties
+macro(squirreljme_test_properties tacTestLongName)
+	# Code for skipped tests
+	set_property(TEST "${tacTestLongName}"
+		PROPERTY SKIP_RETURN_CODE 2)
+	set_tests_properties("${tacTestLongName}"
+		PROPERTIES SKIP_RETURN_CODE 2)
+
+	# Can run in parallel
+	set_property(TEST "${tacTestLongName}"
+		PROPERTY RUN_SERIAL NO)
+	set_tests_properties("${tacTestLongName}"
+		PROPERTIES RUN_SERIAL NO)
+
+	# Test timeout (to prevent infinite loops)
+	set_property(TEST "${tacTestLongName}"
+		PROPERTY TIMEOUT 180)
+	set_tests_properties("${tacTestLongName}"
+		PROPERTIES TIMEOUT 180)
+
+	# Label, name of test, used for filtering
+	set_property(TEST "${tacTestLongName}"
+		PROPERTY LABEL "${tacTestLongName}")
+	set_tests_properties("${tacTestLongName}"
+		PROPERTIES LABEL "${tacTestLongName}")
+endmacro()
+
 # Load in TAC/Nano tests from rom/squirreljme-(slow-)test.(list|nano)
 foreach(testListFile
 	"${CMAKE_SOURCE_DIR}/rom/squirreljme-test.list"
@@ -300,7 +367,22 @@ foreach(testListFile
 			add_test(NAME "${tacTestLongName}"
 				WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 				COMMAND NanoTest "${testJarFile}"
-					"${tacTestJar}" "${tacTestClassPath}" "${tacTestClass}")
+					"${tacTestJar}" "${tacTestClassPath}" "${tacTestClass}"
+					"-")
+
+			# And no memory check variant
+			add_test(NAME "${tacTestLongName}:nomem"
+				WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+				COMMAND NanoTest "${testJarFile}"
+					"${tacTestJar}" "${tacTestClassPath}" "${tacTestClass}"
+					"M")
+
+			# No cleanup (GC) variant
+			add_test(NAME "${tacTestLongName}:noclean"
+				WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+				COMMAND NanoTest "${testJarFile}"
+					"${tacTestJar}" "${tacTestClassPath}" "${tacTestClass}"
+					"C")
 		else()
 			message(STATUS "TAC Test: ${tacTestLongName}")
 
@@ -311,22 +393,13 @@ foreach(testListFile
 					"${tacTestJar}" "${tacTestClassPath}" "${tacTestClass}")
 		endif()
 
-		# Code for skipped tests
-		set_property(TEST "${tacTestLongName}"
-			PROPERTY SKIP_RETURN_CODE 2)
-		set_tests_properties("${tacTestLongName}"
-			PROPERTIES SKIP_RETURN_CODE 2)
+		# Set properties for test
+		squirreljme_test_properties("${tacTestLongName}")
 
-		# Test timeout (to prevent infinite loops)
-		set_property(TEST "${tacTestLongName}"
-			PROPERTY TIMEOUT 180)
-		set_tests_properties("${tacTestLongName}"
-			PROPERTIES TIMEOUT 180)
-
-		# Label, name of test, used for filtering
-		set_property(TEST "${tacTestLongName}"
-			PROPERTY LABEL "${tacTestLongName}")
-		set_tests_properties("${tacTestLongName}"
-			PROPERTIES LABEL "${tacTestLongName}")
+		# And other NanoCoat equivalents
+		if("${testIsNano}" GREATER_EQUAL "0")
+			squirreljme_test_properties("${tacTestLongName}:nomem")
+			squirreljme_test_properties("${tacTestLongName}:noclean")
+		endif()
 	endforeach()
 endforeach()

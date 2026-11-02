@@ -104,13 +104,13 @@ typedef enum sjme_basicTypeId
 
 	/** Number of basic type IDs. */
 	SJME_NUM_BASIC_TYPE_IDS = 12,
-
-	/** Narrow type. */
-	SJME_STACK_TYPE_NARROW = 24,
-
-	/** Wide type. */
-	SJME_STACK_TYPE_WIDE = 48,
 } sjme_basicTypeId;
+	
+/** Narrow type. */
+#define SJME_STACK_TYPE_NARROW ((sjme_basicTypeId)24)
+	
+/** Wide type. */
+#define SJME_STACK_TYPE_WIDE ((sjme_basicTypeId)48)
 
 /**
  * Boolean type.
@@ -300,12 +300,12 @@ typedef sjme_cpointer sjme_cbuffer;
 typedef sjme_intPointerNative sjme_intPointer;
 
 /** Calculates a pointer offset. */
-#define SJME_POINTER_OFFSET(base, off) \
+#define sjme_po(base, off) \
 	(sjme_pointer)(((sjme_intPointer)(base)) + ((sjme_intPointer)(off)))
 
 /** Determines if a pointer overflows. */
 #define SJME_POINTER_OVERFLOW(base, off) \
-	((sjme_intPointer)SJME_POINTER_OFFSET((base), (off)) < \
+	((sjme_intPointer)sjme_po((base), (off)) < \
 		(sjme_intPointer)(base))
 	
 #pragma endregion(sjme_intPointer)

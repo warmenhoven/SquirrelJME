@@ -227,11 +227,7 @@ typedef enum sjme_nvm_store_nativeSlot
  *
  * @since 2026/08/14
  */
-typedef enum sjme_nvm_store_javaSlot
-{
-	/** Integral enum. */
-	sjme_enumInt(sjme_nvm_store_javaSlot),
-} sjme_nvm_store_javaSlot;
+typedef sjme_jint sjme_nvm_store_javaSlot;
 
 struct sjme_nvm_store_file
 {
@@ -396,6 +392,8 @@ struct sjme_nvm_store_slotInfo
  * @param buf The pointer to the buffer to use.
  * @param len The length of the buffer.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2026/07/13
  */
 sjme_errorCode sjme_nvm_store_initFile(
@@ -411,6 +409,10 @@ sjme_errorCode sjme_nvm_store_initFile(
  * @param numBytes The number of bytes to allocate.
  * @param alignment The alignment of the data.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_MEMORY_CORRUPTION ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_STACK_OVERFLOW ...?
  * @since 2026/07/13
  */
 sjme_errorCode sjme_nvm_store_windowAlloca(
@@ -426,6 +428,8 @@ sjme_errorCode sjme_nvm_store_windowAlloca(
  * @param outJava The resultant Java language information.
  * @param inFrame The frame this is for.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_ILLEGAL_STATE ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2026/07/22
  */
 sjme_errorCode sjme_nvm_store_windowLangJava(
@@ -438,6 +442,9 @@ sjme_errorCode sjme_nvm_store_windowLangJava(
  *
  * @param inFile The register file to pop a window from.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_ILLEGAL_STATE ...?
+ * @throws SJME_ERROR_MEMORY_CORRUPTION ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2026/07/13
  */
 sjme_errorCode sjme_nvm_store_windowPop(
@@ -449,6 +456,8 @@ sjme_errorCode sjme_nvm_store_windowPop(
  * @param inFile The register file to push a window to.
  * @param outWindow The resultant window that was newly pushed.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_MEMORY_CORRUPTION ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2026/07/13
  */
 sjme_errorCode sjme_nvm_store_windowPush(
@@ -472,6 +481,11 @@ sjme_errorCode sjme_nvm_store_windowPush(
  * instead @link SJME_NUM_JAVA_TYPE_IDS @endlink to indicate that the type
  * checking for the slot is not important.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
+ * @throws SJME_ERROR_STACK_OVERFLOW ...?
+ * @throws SJME_ERROR_TREAD_INVALID_READ ...?
+ * @throws SJME_ERROR_TREAD_INVALID_WRITE ...?
  * @since 2026/07/13
  */
 sjme_errorCode sjme_nvm_store_windowSlot(

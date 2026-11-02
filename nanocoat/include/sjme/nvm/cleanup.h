@@ -40,6 +40,8 @@ extern "C"
  * @param inType The type of structure this is.
  * @param outCommon The resultant common structure. 
  * @return On any resultant error, if any.
+ * @throws SJME_ERROR_INVALID_ARGUMENT ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/09/28
  */
 sjme_errorCode sjme_nvm_allocR(
@@ -89,6 +91,16 @@ sjme_jboolean sjme_nvm_isAR(
 	sjme_attrInNullable sjme_pointer inWhat,
 	sjme_attrInRange(0, SJME_NVM_NUM_STRUCT) sjme_nvm_structType inType);
 
+/**
+ * Is this an object identifier type.
+ * 
+ * @param inType The structure type.
+ * @return If this is an object identifier type.
+ * @since 2026/11/01
+ */
+sjme_jboolean sjme_nvm_isObjectId(
+	sjme_attrInValue sjme_nvm_structType inType);
+	
 /**
  * Returns the type of the given pointer.
  * 

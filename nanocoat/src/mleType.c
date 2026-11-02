@@ -30,7 +30,7 @@ SJME_NVM_MLE_FUNCTION_DECL(binaryName)
 	argR->v.l = NULL;
 	if (sjme_error_is(error = sjme_nvm_task_threadStringValueOfP(
 		SJME_F_T(inFrame), SJME_AS_JSTRINGP(&argR->v.l),
-		inType->info->name)) || argR->v.l == NULL)
+		SJME_CL_I(inType)->name)) || argR->v.l == NULL)
 		return sjme_error_vmError(inFrame, error);
 	
 	/* Return the given string. */
@@ -52,7 +52,7 @@ SJME_NVM_MLE_FUNCTION_DECL(binaryPackageName)
 	argR->v.l = NULL;
 	if (sjme_error_is(error = sjme_nvm_task_threadStringValueOfP(
 		SJME_F_T(inFrame), SJME_AS_JSTRINGP(&argR->v.l),
-		inType->info->inPackage)) || argR->v.l == NULL)
+		SJME_CL_I(inType)->inPackage)) || argR->v.l == NULL)
 		return sjme_error_vmError(inFrame, error);
 	
 	/* Return the given string. */
@@ -118,15 +118,19 @@ SJME_NVM_MLE_FUNCTION_DECL(findType)
 	/* the target class as it will immediately be fully available. */
 	/* Specifically an array type? */
 	foundClass = NULL;
-	if (sjme_charSeq_charAtIs(seq, 0, '[') ==
-		SJME_ERROR_NONE)
+	if (sjme_charSeq_charAtIs(seq, 0, 
+		'[') == SJME_ERROR_NONE)
 	{
 		/* Can just use the field type loader here. */
 		if (sjme_error_is(error = sjme_nvm_vmClass_loaderLoadF(
 			SJME_F_CL(inFrame), &foundClass,
 			SJME_F_T(inFrame), seq, SJME_JNI_TRUE)) ||
 			foundClass == NULL)
-			return sjme_error_vmError(inFrame, error);
+		{
+			/* Another error other than class not found? */
+			if (error != SJME_ERROR_NO_CLASS)
+				return sjme_error_vmError(inFrame, error);
+		}
 	}
 
 	/* Normal class otherwise. */
@@ -138,7 +142,7 @@ SJME_NVM_MLE_FUNCTION_DECL(findType)
 			SJME_F_T(inFrame), seq, SJME_JNI_TRUE)) ||
 			foundClass == NULL)
 		{
-			/* Another error other than not found? */
+			/* Another error other than class not found? */
 			if (error != SJME_ERROR_NO_CLASS)
 				return sjme_error_vmError(inFrame, error);
 		}
@@ -182,7 +186,7 @@ SJME_NVM_MLE_FUNCTION_DECL(inJar)
 		return SJME_ERROR_MLE_CALL;
 
 	/* Is there no actual library here? */
-	library = sjme_atomic_g(sjme_nvm_rom_library, &inType->info->library);
+	library = sjme_atomic_g(sjme_nvm_rom_library, &SJME_CL_I(inType)->library);
 	if (library == NULL)
 	{
 		argR->t = SJME_JAVA_TYPE_ID_OBJECT;
@@ -284,8 +288,8 @@ SJME_NVM_MLE_FUNCTION_DECL(runtimeName)
 	argR->v.l = NULL;
 	if (sjme_error_is(error = sjme_nvm_task_threadStringValueOfP(
 		SJME_F_T(inFrame), SJME_AS_JSTRINGP(&argR->v.l),
-		(inType->info->runtimeName != NULL ?
-			inType->info->runtimeName : inType->info->name))) ||
+		(SJME_CL_I(inType)->runtimeName != NULL ?
+			SJME_CL_I(inType)->runtimeName : SJME_CL_I(inType)->name))) ||
 		argR->v.l == NULL)
 		return sjme_error_vmError(inFrame, error);
 	

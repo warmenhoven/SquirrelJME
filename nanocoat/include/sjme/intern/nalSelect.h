@@ -62,7 +62,8 @@ extern "C"
 	#if defined(SJME_CONFIG_HAS_OS_WINDOWS)
 		/** Get encoding through Windows APIs. */
 		#define SJME_CONFIG_NAL_ENCODING SJME_CONFIG_NAL_IMPLEMENT_WIN32
-#elif defined(SJME_CONFIG_HAS_OS_POSIX)
+	#elif defined(SJME_CONFIG_HAS_OS_POSIX) && \
+		!defined(SJME_CONFIG_HAS_OS_ANDROID)
 		/** Get encoding through POSIX APIs. */
 		#define SJME_CONFIG_NAL_ENCODING SJME_CONFIG_NAL_IMPLEMENT_POSIX
 	#endif
@@ -88,7 +89,10 @@ extern "C"
 #endif
 
 #if !defined(SJME_CONFIG_NAL_GETENV)
-	#if defined(SJME_CONFIG_HAS_C89) && defined(SJME_CONFIG_HAS_GETENV)
+	#if defined(SJME_CONFIG_HAS_OS_BAREMETAL)
+		/** getenv() is not available. */
+		#define SJME_CONFIG_NAL_GETENV SJME_CONFIG_NAL_IMPLEMENT_NONE
+	#elif defined(SJME_CONFIG_HAS_C89) && defined(SJME_CONFIG_HAS_GETENV)
 		/** Use Standard C getenv implementation. */
 		#define SJME_CONFIG_NAL_GETENV SJME_CONFIG_NAL_IMPLEMENT_STDC
 	#endif
@@ -119,7 +123,8 @@ extern "C"
 	#if defined(SJME_CONFIG_HAS_OS_WINDOWS)
 		/** Use Windows version implementation. */
 		#define SJME_CONFIG_NAL_OS_VERSION SJME_CONFIG_NAL_IMPLEMENT_WIN32
-	#elif defined(SJME_CONFIG_HAS_OS_POSIX)
+	#elif defined(SJME_CONFIG_HAS_OS_POSIX) && \
+		defined(SJME_CONFIG_HAS_SYS_UTSNAME_H)
 		/** Use POSIX version implementation. */
 		#define SJME_CONFIG_NAL_OS_VERSION SJME_CONFIG_NAL_IMPLEMENT_POSIX
 	#endif
@@ -150,7 +155,10 @@ extern "C"
 #endif
 
 #if !defined(SJME_CONFIG_NAL_TCP_UDP)
-	#if defined(SJME_CONFIG_HAS_OS_PC_DOS)
+	#if defined(SJME_CONFIG_HAS_OS_BAREMETAL)
+		/** Baremetal Networking. */
+		#define SJME_CONFIG_NAL_TCP_UDP SJME_CONFIG_NAL_IMPLEMENT_NONE
+	#elif defined(SJME_CONFIG_HAS_OS_PC_DOS)
 		/** DOS Networking. */
 		#define SJME_CONFIG_NAL_TCP_UDP SJME_CONFIG_NAL_IMPLEMENT_NONE
 	#elif defined(SJME_CONFIG_HAS_OS_WINDOWS) || \
@@ -212,6 +220,21 @@ extern "C"
 #endif
 
 #pragma region(none)
+	
+#if !defined(SJME_CONFIG_NAL_CPU_COUNT)
+	/** Not implemented. */
+	#define SJME_CONFIG_NAL_CPU_COUNT SJME_CONFIG_NAL_IMPLEMENT_NONE
+#endif
+	
+#if !defined(SJME_CONFIG_NAL_CURRENT_TIME)
+	/** Not implemented. */
+	#define SJME_CONFIG_NAL_CURRENT_TIME SJME_CONFIG_NAL_IMPLEMENT_NONE
+#endif
+	
+#if !defined(SJME_CONFIG_NAL_DEFAULT_PATH)
+	/** No system provided default paths. */
+	#define SJME_CONFIG_NAL_DEFAULT_PATH SJME_CONFIG_NAL_IMPLEMENT_NONE
+#endif
 	
 #if !defined(SJME_CONFIG_NAL_ENCODING)
 	/** Not implemented. */
@@ -290,7 +313,10 @@ extern "C"
 
 #pragma endregion(none)
 
-#if (SJME_CONFIG_NAL_ENCODING == SJME_CONFIG_NAL_IMPLEMENT_WIN32) || \
+#if (SJME_CONFIG_NAL_CPU_COUNT == SJME_CONFIG_NAL_IMPLEMENT_WIN32) || \
+	(SJME_CONFIG_NAL_CURRENT_TIME == SJME_CONFIG_NAL_IMPLEMENT_WIN32) || \
+	(SJME_CONFIG_NAL_DEFAULT_PATH == SJME_CONFIG_NAL_IMPLEMENT_WIN32) || \
+	(SJME_CONFIG_NAL_ENCODING == SJME_CONFIG_NAL_IMPLEMENT_WIN32) || \
 	(SJME_CONFIG_NAL_EXEC_PATH == SJME_CONFIG_NAL_IMPLEMENT_WIN32) || \
 	(SJME_CONFIG_NAL_GETENV == SJME_CONFIG_NAL_IMPLEMENT_WIN32) || \
 	(SJME_CONFIG_NAL_LINE_ENDING == SJME_CONFIG_NAL_IMPLEMENT_WIN32) || \

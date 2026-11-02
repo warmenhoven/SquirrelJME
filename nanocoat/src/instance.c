@@ -34,136 +34,6 @@ sjme_jint sjme_nvm_fieldValueSize(
 		offsetof(sjme_nvm_valueSetRaw, l);
 }
 
-sjme_jint sjme_nvm_instance_calcIdentityHash(
-	sjme_attrInNotNull sjme_nvm_task inTask,
-	sjme_attrInValue void* pointer)
-{
-	sjme_jint base;
-	
-	/* Use random base PRNG from task. */
-	base = 0;
-	if (inTask != NULL)
-		base = sjme_random_nextIntR(&inTask->globals.idHash);
-	
-	/* Then based on the pointer. */
-#if defined(SJME_CONFIG_HAS_POINTER64)
-	base += (((sjme_intPointer)pointer) ^
-		((((sjme_intPointer)pointer)) >> 31));
-#else
-	base += (sjme_jint)((sjme_intPointer)pointer);
-#endif
-
-	/* Never allow zero to be a valid identity hash. */
-	return (base == 0 ? INT32_C(0x01) : base);
-}
-
-sjme_errorCode sjme_nvm_instance_countDownR(
-	sjme_attrInNotNull sjme_jobject object
-	SJME_DEBUG_ONLY_COMMA SJME_DEBUG_DECL_FILE_LINE_FUNC_OPTIONAL)
-{
-	sjme_alloc_weak weak;
-	sjme_errorCode error;
-#if defined(SJME_CONFIG_DEBUG_GC)
-	sjme_jint oldCount;
-	sjme_nvm_structType typeOf;
-#endif
-	
-	if (object == NULL)
-		return SJME_ERROR_NULL_STACK_POINTER;
-
-	/* Must be a valid object type. */
-	if (!sjme_nvm_isAR(object, SJME_NVM_STRUCT_ANY_OBJECT_INSTANCE))
-		return SJME_ERROR_INVALID_OBJECT;
-	
-	/* This must be a valid weak as well! */
-	weak = NULL;
-	if (sjme_error_is(error = sjme_alloc_weakRefGet(object, &weak)))
-		return sjme_error_default(error);
-
-#if defined(SJME_CONFIG_DEBUG_GC)
-	/* Get old count for debugging. */
-	oldCount = sjme_atomic_g(sjme_jint, &weak->count);
-	typeOf = object->common.type;
-#endif
-	
-#if defined(SJME_CONFIG_DEBUG_NO_REAL_GC)
-	if (SJME_JNI_TRUE)
-		return SJME_ERROR_NONE;
-#endif
-
-	/* Reduce the count on this. */
-	if (sjme_error_is(error = sjme_alloc_weakUnRef(object)) ||
-		weak == NULL)
-		return sjme_error_default(error);
-
-#if defined(SJME_CONFIG_DEBUG_GC)
-	/* Debug. */
-	sjme_messageR(SJME_DEBUG_FILE_LINE_COPY, SJME_JNI_FALSE,
-		"GC DN-1: %d:%p (%s) %d -> %d",
-		typeOf,
-		object, 
-		(sjme_atomic_g(sjme_jclass, &object->isClass) != NULL ?
-			sjme_charSeq_tempUtf(
-				sjme_atomic_g(sjme_jclass,
-					&object->isClass)->fieldName) : "?"),
-		oldCount,
-		sjme_atomic_g(sjme_jint, &weak->count));
-#endif
-
-	/* Success! */
-	return SJME_ERROR_NONE;
-}
-
-sjme_errorCode sjme_nvm_instance_countUpR(
-	sjme_attrInNotNull sjme_jobject object
-	SJME_DEBUG_ONLY_COMMA SJME_DEBUG_DECL_FILE_LINE_FUNC_OPTIONAL)
-{
-	sjme_alloc_weak weak;
-	sjme_errorCode error;
-#if defined(SJME_CONFIG_DEBUG_GC)
-	sjme_jint oldCount;
-#endif
-	
-	if (object == NULL)
-		return SJME_ERROR_NULL_STACK_POINTER;
-
-	/* Must be a valid object type. */
-	if (!sjme_nvm_isAR(object, SJME_NVM_STRUCT_ANY_OBJECT_INSTANCE))
-		return SJME_ERROR_INVALID_OBJECT;
-	
-	/* This must be a valid weak as well! */
-	weak = NULL;
-	if (sjme_error_is(error = sjme_alloc_weakRefGet(object, &weak)) ||
-		weak == NULL)
-		return sjme_error_default(error);
-
-#if defined(SJME_CONFIG_DEBUG_GC)
-	/* Recover old count for debugging. */
-	oldCount = sjme_atomic_g(sjme_jint, &weak->count);
-#endif
-
-	/* Count up. */
-	if (sjme_error_is(error = sjme_alloc_weakRef(object, &weak)) ||
-		weak == NULL)
-		return sjme_error_default(error);
-
-#if defined(SJME_CONFIG_DEBUG_GC)
-	/* Debug. */
-	sjme_messageR(SJME_DEBUG_FILE_LINE_COPY, SJME_JNI_FALSE,
-		"GC UP+1: %d:%p (%s) %d -> %d",
-		object->common.type,
-		object,
-		(sjme_atomic_g(sjme_jclass, &object->isClass) != NULL ?
-			sjme_charSeq_tempUtf(sjme_atomic_g(sjme_jclass,
-				&object->isClass)->fieldName) : "?"),
-		oldCount,
-		sjme_atomic_g(sjme_jint, &weak->count));
-#endif
-
-	/* Success! */
-	return SJME_ERROR_NONE;
-}
-
 sjme_errorCode sjme_nvm_instance_defaultInit(
 	sjme_attrInNotNull sjme_nvm_thread contextThread,
 	sjme_attrOutNullable sjme_nvm_frame* outFrame,
@@ -225,68 +95,6 @@ sjme_errorCode sjme_nvm_instance_defaultInit(
 	return SJME_ERROR_NONE;
 }
 
-sjme_nvm_value* sjme_nvm_instance_fieldAccessor(
-	sjme_attrInNotNull sjme_jobject instance,
-	sjme_attrInNotNull sjme_jfieldID field)
-{
-#define NUM_VOIDLESS 4
-	sjme_threadLocal(sjme_nvm_value, voidless[NUM_VOIDLESS]);
-	sjme_threadLocal(sjme_jint, voidlessNext);
-
-	/* If neither are valid, treat this as a bad memory read/write. */
-	if (instance == NULL || field == NULL)
-		goto fail_voidless;
-
-	/* Static field? */
-	if (SJME_NVM_ACC_IS(field->flags, STATIC))
-	{
-		/* Cannot read/write to non-classes. */
-		if (!sjme_nvm_isAR(instance, SJME_NVM_STRUCT_CLASS_INSTANCE))
-			goto fail_voidless;
-
-		/* Wrong class? */
-		if (instance !=
-			(sjme_jobject)sjme_atomic_g(sjme_jclass, &field->member.inClass))
-			goto fail_voidless;
-
-#if defined(SJME_CONFIG_DEBUG_FIELD)
-		/* Debug. */
-		sjme_message("STATIC %p->%p + %d",
-			instance, ((sjme_jclass)instance)->staticChunk,
-			field->pointerOffset);
-#endif
-
-		/* Values is based on the static chunk. */
-		return SJME_POINTER_OFFSET(((sjme_jclass)instance)->staticChunk,
-			field->pointerOffset);
-	}
-
-	/* Instance field? */
-	else
-	{
-		/* Can only read/write plain objects. */
-		if (!sjme_nvm_isAR(instance, SJME_NVM_STRUCT_OBJECT_INSTANCE))
-			goto fail_voidless;
-		
-#if defined(SJME_CONFIG_DEBUG_FIELD)
-		/* Debug. */
-		sjme_message("INSTANCE %p + %d",
-			instance, field->pointerOffset);
-#endif
-		
-		/* Value is based on the object itself, from the basis of */
-		/* its allocation size. */
-		return SJME_POINTER_OFFSET((sjme_pointer)instance,
-			field->pointerOffset);
-	}
-	
-	/* Fallback to read/write some kind of valid memory. */
-fail_voidless:
-	memset(&voidless, 0, sizeof(voidless));
-	return &voidless[(voidlessNext++) & (NUM_VOIDLESS - 1)];
-#undef NUM_VOIDLESS
-}
-
 sjme_errorCode sjme_nvm_instance_initFields(
 	sjme_attrInNotNull sjme_nvm_thread contextThread,
 	sjme_attrInNotNull sjme_jobject instance,
@@ -299,6 +107,7 @@ sjme_errorCode sjme_nvm_instance_initFields(
 	sjme_jfieldID field;
 	sjme_nvm_jfieldAccessFunc accessor;
 	sjme_nvm_value* direct;
+	sjme_nvm_valueVolatile volatileStorage;
 	sjme_nvm_class_fieldConstVal* constVal;
 	sjme_jstring constString;
 
@@ -306,8 +115,10 @@ sjme_errorCode sjme_nvm_instance_initFields(
 		fields == NULL || placements == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
 	
-	/* Always use the default accessor to write initial field values. */
-	accessor = SJME_T_K(contextThread)->globals.accessor;
+	/* Always use the default accessor to write initial field values, */
+	/* however always initialize as volatile. */
+	accessor = SJME_T_K(contextThread)->
+		globals.accessor[SJME_NVM_FIELD_ACCESS_VOLATILE_INSTANCE];
 
 	/* Since we have bound all static fields, we can just use that. */
 	for (i = 0, n = fields->length; i < n; i++)
@@ -321,7 +132,7 @@ sjme_errorCode sjme_nvm_instance_initFields(
 			continue;
 		
 		/* Get direct pointer to the data. */
-		direct = accessor(instance, field);
+		direct = accessor(instance, field, &volatileStorage);
 		if (direct == NULL)
 			return SJME_ERROR_FIELD_NOT_DIRECT;
 
@@ -340,15 +151,19 @@ sjme_errorCode sjme_nvm_instance_initFields(
 			
 			/* Set field. */
 			if (sjme_error_is(error = sjme_nvm_vmField_cisSet(
-			direct, field->info->basicType,
+				direct, field->info->basicType,
 				NULL, SJME_VLS_JOBJECT(constString))))
 				return sjme_error_vmError(contextThread, error);
 		}
 
-		/* Copy value directly is primitive. */
+		/* Copy value directly if primitive. */
 		else if (field->info->javaType != SJME_JAVA_TYPE_ID_OBJECT)
 			memmove(direct, &constVal->value.java,
 				sjme_nvm_typeMul[field->info->javaType]);
+		
+		/* Commit. */
+		volatileStorage.commit = SJME_JNI_TRUE;
+		accessor(instance, field, &volatileStorage);
 	}
 
 	/* Success! */
@@ -377,186 +192,13 @@ sjme_errorCode sjme_nvm_instance_initFieldsChunk(
 			return SJME_ERROR_ILLEGAL_STATE;
 		
 		/* Determine the base offset to write at. */
-		into = SJME_POINTER_OFFSET(chunk, placements->offset[type]);
+		into = sjme_po(chunk, placements->offset[type]);
 
 		/* Set details for the partition. */
 		into->type = type;
 		into->length = placements->count[type];
 	}
 	
-	/* Success! */
-	return SJME_ERROR_NONE;
-}
-
-sjme_errorCode sjme_nvm_instance_fieldAccessStack(
-	sjme_attrInNotNull sjme_nvm_thread contextThread,
-	sjme_attrInNotNull sjme_nvm_frame_gcCommit* commit,
-	sjme_attrInNotNull sjme_jfieldID fieldId,
-	sjme_attrInNotNull sjme_jobject instance,
-	sjme_attrInNotNull sjme_jvalueTyped* stackType,
-	sjme_attrInValue sjme_jboolean isPut)
-{
-	sjme_errorCode error;
-	sjme_nvm_value* direct;
-	sjme_nvm_jfieldAccessFunc accessor;
-
-	if (contextThread == NULL || commit == NULL || fieldId == NULL ||
-		stackType == NULL)
-		return SJME_ERROR_NULL_ARGUMENTS;
-
-	if (instance == NULL)
-		return SJME_ERROR_NULL_STACK_POINTER;
-	
-	/* Obtain accessor for this field. */
-	if (fieldId->accessor != NULL)
-		accessor = fieldId->accessor;
-	else
-		accessor = SJME_T_K(contextThread)->globals.accessor;
-
-	/* There must be an accessor. */
-	if (accessor == NULL)
-		return SJME_ERROR_FIELD_NOT_DIRECT;
-
-	/* Direct access. */
-	direct = accessor(instance, fieldId);
-	if (direct == NULL)
-		return SJME_ERROR_FIELD_NOT_DIRECT;
-
-	/* Handling an object. */
-	if (fieldId->javaType == SJME_JAVA_TYPE_ID_OBJECT)
-	{
-		/* Did the object suddenly change in the field? */
-		if (direct->l.check != (direct->l.p == NULL ? 0 :
-			direct->l.p->identityHash))
-			return sjme_error_vmError(contextThread,
-				SJME_ERROR_OBJECT_MISMATCHED);
-		
-		if (isPut)
-		{
-			/* Set the field value. */
-			if (sjme_error_is(error = sjme_nvm_vmField_cisSet(
-				direct, fieldId->info->basicType,
-				commit, SJME_VLS_JVALUE_TYPED_P(stackType))))
-				return sjme_error_vmError(contextThread, error);
-		}
-
-		/* Read in value. */
-		else
-		{
-			stackType->v.l = direct->l.p;
-		}
-	}
-	
-	/* No promotion/demotion needed. */
-	else if (fieldId->extendedType < SJME_NUM_JAVA_TYPE_IDS)
-	{
-		if (isPut)
-			memmove(&direct->v, &stackType->v,
-				sjme_nvm_typeMul[fieldId->extendedType]);
-		else
-			memmove(&stackType->v, &direct->v,
-				sjme_nvm_typeMul[fieldId->extendedType]);
-	}
-
-	/* Translation is needed. */
-	else
-	{
-		/* Determine where to move to/from. */
-		switch (fieldId->basicType)
-		{
-				/* Force to boolean based value. */
-			case SJME_BASIC_TYPE_ID_BOOLEAN:
-				if (isPut)
-					direct->v.b = (stackType->v.i ? 1 : 0);
-				else
-					stackType->v.i = (direct->v.b ? 1 : 0);
-				break;
-
-				/* Expand to byte. */
-			case SJME_BASIC_TYPE_ID_BYTE:
-			case SJME_JAVA_TYPE_ID_BOOLEAN_OR_BYTE:
-				if (isPut)
-					direct->v.b = (sjme_jbyte)stackType->v.i;
-				else
-				{
-					stackType->v.i = direct->v.b;
-					if ((direct->v.b & INT8_C(0x80)) != 0)
-						stackType->v.i |= INT32_C(0xFFFFFF00);
-				}
-				break;
-
-				/* Expand to short. */
-			case SJME_BASIC_TYPE_ID_SHORT:
-				if (isPut)
-					direct->v.s = (sjme_jshort)stackType->v.i;
-				else
-				{
-					stackType->v.i = direct->v.s;
-					if ((direct->v.s & INT16_C(0x8000)) != 0)
-						stackType->v.i |= INT32_C(0xFFFF0000);
-				}
-				break;
-
-				/* Limit to char. */
-			case SJME_BASIC_TYPE_ID_CHARACTER:
-				if (isPut)
-					direct->v.c = (sjme_jchar)stackType->v.i;
-				else
-					stackType->v.i = ((sjme_jint)direct->v.c) &
-						INT32_C(0xFFFF);
-				break;
-
-			default:
-				return SJME_ERROR_INVALID_FIELD_TYPE;
-		}
-	}
-
-	/* Success! */
-	return SJME_ERROR_NONE;
-}
-
-sjme_errorCode sjme_nvm_instance_monitorEnter(
-	sjme_attrInNotNull sjme_nvm_thread contextThread,
-	sjme_attrInNotNull sjme_jobject instance)
-{
-	sjme_errorCode error;
-	
-	if (contextThread == NULL || instance == NULL)
-		return SJME_ERROR_NULL_ARGUMENTS;
-
-	/* Grab the lock on the object. */
-	if (sjme_error_is(error = sjme_thread_spinLockGrab(
-		&instance->common.lock)))
-		return sjme_error_vmError(contextThread, error);
-
-	/* Count up the monitor since we do have the lock. */
-	sjme_atomic_ga(sjme_jint, &instance->monitorCount, 1);
-
-	/* Success! */
-	return SJME_ERROR_NONE;
-}
-
-sjme_errorCode sjme_nvm_instance_monitorExit(
-	sjme_attrInNotNull sjme_nvm_thread contextThread,
-	sjme_attrInNotNull sjme_jobject instance)
-{
-	sjme_errorCode error;
-	
-	if (contextThread == NULL || instance == NULL)
-		return SJME_ERROR_NULL_ARGUMENTS;
-
-	/* There are no monitor locks on this instance? */
-	if (sjme_atomic_g(sjme_jint, &instance->monitorCount) < 0)
-		return SJME_ERROR_NOT_LOCK_OWNER;
-	
-	/* Release the lock on the object. */
-	if (sjme_error_is(error = sjme_thread_spinLockRelease(
-		&instance->common.lock, NULL)))
-		return sjme_error_vmError(contextThread, error);
-
-	/* We did a successful release, so count the locks down. */
-	sjme_atomic_ga(sjme_jint, &instance->monitorCount, -1);
-
 	/* Success! */
 	return SJME_ERROR_NONE;
 }

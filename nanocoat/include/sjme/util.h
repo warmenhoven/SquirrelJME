@@ -150,6 +150,28 @@ sjme_jint sjme_compare_null(
 	sjme_attrInNullable sjme_cpointer b);
 
 /**
+ * Converts a narrow string to an integral value.
+ *
+ * The return value of @code INTMAX_MIN @endcode does differ from the
+ * traditional @code 0 @endcode, however it is more likely that zero will
+ * be more of a valid value than the smallest possible value. Additionally,
+ * there is no @code errno @endcode available. If there must be no doubt that
+ * such smallest possible value is not parsed then @code endP @endcode can be
+ * used as this implementation will never set it if parsing fails.
+ *
+ * @param str The string to convert.
+ * @param endP The resultant end pointer which points to the end of
+ * the actually parsed value, this is optional.
+ * @param base The number base to parse.
+ * @return The resultant value, or @code INTMAX_MIN @endcode if it could
+ * not be parsed.
+ * @since 2026/10/14
+ */
+sjme_intMax sjme_lpcstoimax(sjme_attrInNotNull sjme_lpcstr str,
+	sjme_attrOutNullable sjme_lpcstr* endP,
+	sjme_attrInRange(2, 36) sjme_jint base);
+
+/**
  * Searches for the given wide character in the given wide string.
  *
  * @param within The string to search within.
@@ -192,9 +214,9 @@ sjme_jint sjme_lpwcsncmp(sjme_lpcwstr a, sjme_lpcwstr b, sjme_jint n);
 sjme_jint sjme_lpwcscasecmp(sjme_lpcwstr a, sjme_lpcwstr b);
 
 /**
- * Concatenates @code src @endcode onto @code dest @code with the destination
- * limited to @code limit @code characters, a trailing @code NUL @endcode is
- * always added.
+ * Concatenates @code src @endcode onto @code dest @endcode with the
+ * destination limited to @code limit @endcode characters, a
+ * trailing @code NUL @endcode is always added.
  *
  * Neither string should overlap, however this implementation
  * uses @code memmove() @endcode so technically it can overlap and the
@@ -282,6 +304,7 @@ sjme_errorCode sjme_random_init(
  * @param outRandom The random state to initialize. 
  * @param seed The seed value.
  * @return Returns @link SJME_JNI_TRUE @endlink on success.
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2023/12/02
  */
 sjme_errorCode sjme_random_initL(
@@ -595,6 +618,8 @@ sjme_errorCode sjme_swap_shu8_uint_memmove(
  * @param src The source.
  * @param n The number of bytes to copy.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INDEX_OUT_OF_BOUNDS ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/07/10
  */
 sjme_errorCode sjme_swap_uint_memmove(
@@ -808,6 +833,8 @@ sjme_juint sjme_util_intZeroesTrailingU(
  * @param inVal The value to convert to binary.
  * @param bitCount The number of bits to output, if zero then this is all bits.
  * @return Any resultant error, if any.
+ * @throws SJME_ERROR_INDEX_OUT_OF_BOUNDS ...?
+ * @throws SJME_ERROR_NULL_ARGUMENTS ...?
  * @since 2024/08/24
  */
 sjme_errorCode sjme_util_intToBinary(
@@ -913,6 +940,15 @@ sjme_jint sjme_util_shortToInt(
 #if defined(SJME_CONFIG_SIZEOF_SIZE_T) && SJME_CONFIG_SIZEOF_SIZE_T == 4
 
 /**
+ * Clamps a @code sjme_jint @endcode to @code size_t @endcode .
+ *
+ * @param in The input value.
+ * @return The resultant clamped value.
+ * @since 2026/11/02
+ */
+#define sjme_util_intToSize(in) ((size_t)(in))
+	
+/**
  * Clamps a @code size_t @endcode to @code sjme_jint @endcode .
  *
  * @param in The input value.
@@ -922,6 +958,15 @@ sjme_jint sjme_util_shortToInt(
 #define sjme_util_sizeToInt(in) ((sjme_jint)(in))
 
 #else
+	
+/**
+ * Clamps a @code sjme_jint @endcode to @code size_t @endcode .
+ *
+ * @param in The input value.
+ * @return The resultant clamped value.
+ * @since 2026/11/02
+ */
+size_t sjme_util_intToSize(sjme_jint in);
 
 /**
  * Clamps a @code size_t @endcode to @code sjme_jint @endcode .

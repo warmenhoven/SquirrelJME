@@ -10,12 +10,18 @@
 /* ReSharper disable CppUnusedIncludeDirective */
 
 #include "sjme/atomic.h"
+#include "sjme/debug.h"
 
 /* clang-format off */ /* @formatter:off */
 /* ------------------------------------------------------------------------ */
 
 #define sjme_atomic_type sjme_jint
 #include "sjme/atomicTemplateC.h" /* NOLINT */
+
+#if !defined(SJME_CONFIG_HAS_NO_JLONG_MATH)
+#define sjme_atomic_type sjme_jlongNative
+#include "sjme/atomicTemplateC.h" /* NOLINT */
+#endif
 
 #define sjme_atomic_type sjme_juint
 #include "sjme/atomicTemplateC.h" /* NOLINT */
@@ -47,11 +53,35 @@
 #if defined(SJME_CONFIG_HAS_ATOMIC_VOLATILE)
 void sjme_atomic_interruptsDisable(void)
 {
-	sjme_todo("Impl?");
+#if defined(SJME_CONFIG_HAS_OS_BAREMETAL) && \
+	defined(SJME_CONFIG_HAS_ASM)
+	#if defined(SJME_CONFIG_HAS_ARCH_IA16) || \
+		defined(SJME_CONFIG_HAS_ARCH_IA32)
+		sjme_asm(cli);
+	#else
+		/* Just force a memory barrier. */
+		sjme_atomic_barrier();
+	#endif
+#else
+	/* Just force a memory barrier. */
+	sjme_atomic_barrier();
+#endif
 }
 
 void sjme_atomic_interruptsEnable(void)
 {
-	sjme_todo("Impl?");
+#if defined(SJME_CONFIG_HAS_OS_BAREMETAL) && \
+	defined(SJME_CONFIG_HAS_ASM)
+	#if defined(SJME_CONFIG_HAS_ARCH_IA16) || \
+		defined(SJME_CONFIG_HAS_ARCH_IA32)
+		sjme_asm(sti);
+	#else
+		/* Just force a memory barrier. */
+		sjme_atomic_barrier();
+	#endif
+#else
+	/* Just force a memory barrier. */
+	sjme_atomic_barrier();
+#endif
 }
 #endif

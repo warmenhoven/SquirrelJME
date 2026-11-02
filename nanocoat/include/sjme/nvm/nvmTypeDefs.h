@@ -433,6 +433,13 @@ typedef struct sjme_nvm_class_annotationBase sjme_nvm_class_annotationBase;
 typedef sjme_nvm_class_annotationBase* sjme_nvm_class_annotation;
 	
 /**
+ * Stores an annotation's value.
+ * 
+ * @since 2026/10/23
+ */
+typedef struct sjme_nvm_class_annotationValue sjme_nvm_class_annotationValue;
+	
+/**
  * Stores multiple field values for a given type.
  * 
  * @since 2024/10/27
@@ -593,6 +600,9 @@ SJME_LIST_DECLARE(sjme_nvm_class_methodInfo, 0);
 #include "sjme/atomicTemplate.h" /* NOLINT */
 
 #define sjme_atomic_type sjme_nvm_stringPool_string
+#include "sjme/atomicTemplate.h" /* NOLINT */
+
+#define sjme_atomic_type sjme_nvm_rom_swmManager
 #include "sjme/atomicTemplate.h" /* NOLINT */
 
 #define sjme_atomic_type sjme_nvm_class_poolEntryClass

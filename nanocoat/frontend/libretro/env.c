@@ -12,6 +12,7 @@
 #include "sjme/nvm/nvm.h"
 #include "sjme/debug.h"
 #include "frontend/libretro/shared.h"
+#include "sjme/util.h"
 
 /** Variables to use within the core. */
 static const struct retro_variable sjme_libretro_coreVariables[] =
@@ -19,13 +20,57 @@ static const struct retro_variable sjme_libretro_coreVariables[] =
 #if defined(SJME_CONFIG_DEBUG) && defined(SJME_CONFIG_UNIT_TEST)
 	/* Run unit tests? */
 	{
-		SJME_LIBRETRO_CONFIG_UNIT_TESTS,
-		"Run Unit Tests; false|true"
+		SJME_LIBRETRO_CORE_OPTION_UNIT_TESTS_NAME,
+		"Run Unit Tests; false|true",
 	},
 #endif
+	
+	{
+		SJME_LIBRETRO_CORE_OPTION_DUMP_VARS_NAME,
+		"Dump Variables (Hello Demo); false|true",
+	},
+	
+	{
+		SJME_LIBRETRO_CORE_OPTION_TIC_RATE_NAME,
+		"Clock; 491520|122880|245760|983040|1966080|3932160"
+	},
 
 	/* End. */
 	{NULL, NULL}
+};
+
+/** Whether variables are to be displayed or not. */
+static const struct retro_core_option_display
+	sjme_libretro_coreVariablesDisplay[] =
+{
+#if defined(SJME_CONFIG_DEBUG) && defined(SJME_CONFIG_UNIT_TEST)
+	/* Run unit tests? */
+	{
+		SJME_LIBRETRO_CORE_OPTION_UNIT_TESTS_NAME,
+		SJME_JNI_FALSE,
+	},
+#endif
+	
+	{
+		SJME_LIBRETRO_CORE_OPTION_DUMP_VARS_NAME,
+		SJME_JNI_FALSE,
+	},
+	
+	{
+		SJME_LIBRETRO_CORE_OPTION_TIC_RATE_NAME,
+		SJME_JNI_TRUE,
+	},
+	
+	/* End. */
+	{NULL, false}
+};
+
+sjme_lpcstr sjme_libretro_optNames[SJME_LIBRETRO_NUM_CORE_OPTIONS] =
+{
+	"sjme_undefined",
+	SJME_LIBRETRO_CORE_OPTION_UNIT_TESTS_NAME,
+	SJME_LIBRETRO_CORE_OPTION_DUMP_VARS_NAME,
+	SJME_LIBRETRO_CORE_OPTION_TIC_RATE_NAME,
 };
 
 sjme_attrUnused RETRO_API void retro_cheat_reset(void)
@@ -57,11 +102,13 @@ sjme_attrUnused RETRO_API void retro_get_system_info(
 	info->library_name = "SquirrelJME";
 	info->library_version = SQUIRRELJME_VERSION;
 	
-	/* These are all of the Java related extensions. */
-	info->valid_extensions = "zip|jam|jar|jad|adf|sec|sto|kjx";
+	/* These are all the Java related extensions. */
+	info->valid_extensions = "jar|sqc|jam|jad|kjx|adf|sec|sto|sp|"
+		"sp0|sp1|sp2|sp3|sp4|sp5|sp6|sp7|sp8|sp9";
 	
-	/* We need the full path for executables. */
-	info->need_fullpath = true;
+	/* Everything is handled by the VFS wrapper, so we do not need */
+	/* native OS support here. */
+	info->need_fullpath = false;
 
 	/* RetroArch is not permitted to unzip entries for us. */
 	info->block_extract = true;
@@ -100,6 +147,9 @@ sjme_attrUnused RETRO_API void retro_set_environment(
 	sjme_libretro_globals.envCallback(
 		RETRO_ENVIRONMENT_SET_VARIABLES,
 		(void*)&sjme_libretro_coreVariables);
+	sjme_libretro_globals.envCallback(
+		RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY,
+		(void*)&sjme_libretro_coreVariablesDisplay);
 
 	/* Lookup VFS interface. */
 	sjme_libretro_globals.vfs.required_interface_version = 1;
@@ -107,4 +157,34 @@ sjme_attrUnused RETRO_API void retro_set_environment(
 		RETRO_ENVIRONMENT_GET_VFS_INTERFACE,
 		(void*)&sjme_libretro_globals.vfs))
 		sjme_libretro_globals.vfs.iface = NULL;
+}
+
+void sjme_libretro_refreshCoreOptions(void)
+{
+	sjme_jint i;
+	sjme_libretro_coreOptionValue* option;
+	struct retro_variable retroVar;
+	
+	/* Go through and get each option. */
+	for (i = 0; i < SJME_LIBRETRO_NUM_CORE_OPTIONS; i++)
+	{
+		/* Reset option to nothing. */
+		option = &sjme_libretro_globals.options[i];
+		memset(option, 0, sizeof(*option));
+		
+		/* We want this specific variable. */
+		memset(&retroVar, 0, sizeof(retroVar));
+		retroVar.key = sjme_libretro_optNames[i];
+		
+		/* Read in the value, we only care if not-null. */
+		if (sjme_libretro_globals.envCallback(
+			RETRO_ENVIRONMENT_GET_VARIABLE,
+			(void*)&retroVar))
+			if (retroVar.value != NULL)
+			{
+				option[i].string = retroVar.value;
+				option[i].number = sjme_lpcstoimax(
+					retroVar.value, NULL, 10);
+			}
+	}
 }

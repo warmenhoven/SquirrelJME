@@ -12,12 +12,20 @@
 
 .runtime_visible_annotation
 	.annotation "Lnano/NanoDetails;"
-		.elem .str_kind "expectedException" "Ljava/lang/NullPointerException;"
+		.elem .str_kind "thrown" "Ljava/lang/NullPointerException;"
 	.end .annotation
 .end .annotation_attr
 
 .method public static main([Ljava/lang/String;)V
-.limit stack 2
-	invokestatic nano/NanoShelf/todo()V
+.limit stack 3
+; Grab an array
+	aconst_null
+	
+; Write something to the first index
+	iconst_0
+	ldc 127
+	sastore
+
+; Done
 	return
 .end method
