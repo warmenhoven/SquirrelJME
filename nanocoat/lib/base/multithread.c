@@ -19,6 +19,14 @@
 
 #pragma endregion(atomics)
 
+#if defined(SJME_CONFIG_ONLY_THREAD_SINGLE)
+	/** The number of loops to wait for until heavier yield occurs. */
+	#define SJME_THREAD_YIELD_LIMIT 0
+#else
+	/** The number of loops to wait for until heavier yield occurs. */
+	#define SJME_THREAD_YIELD_LIMIT 32768
+#endif
+
 sjme_thread sjme_thread_currentR(void)
 {
 	sjme_thread result;
@@ -35,7 +43,10 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockGrabRead(
 {
 	sjme_errorCode error;
 	sjme_thread_spinLock* readLock;
-	sjme_jint writeCount;
+	sjme_jint writeCount, cycle;
+	sjme_jboolean lockStep;
+	
+	/* LCOV_EXCL_START */
 	
 	if (inLock == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
@@ -45,17 +56,19 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockGrabRead(
 	if (readLock == NULL)
 		return SJME_ERROR_ILLEGAL_STATE;
 	
+	/* Light barrier before running. */
+	sjme_atomic_light();
+	
 	/* Attempt locking constantly. */
-	for (;;)
+	cycle = 0;
+	for (lockStep = SJME_JNI_FALSE;; lockStep = !lockStep)
 	{
 		/* Grab the read lock. */
 		if (sjme_error_is(error = sjme_thread_spinLockGrab(readLock)))
 			return sjme_error_default(error);
 		
 		/* The write count determines if we cannot get this lock. */
-		sjme_atomic_barrier();
 		writeCount = sjme_atomic_g(sjme_jint, &inLock->writeCount);
-		sjme_atomic_barrier();
 			
 		/* Release the read lock. */
 		if (sjme_error_is(error = sjme_thread_spinLockRelease(readLock,
@@ -65,10 +78,9 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockGrabRead(
 		/* The write lock has been grabbed. */
 		if (writeCount != 0)
 		{
-			/* Let other threads run. */
-			sjme_atomic_barrier();
-			sjme_thread_yield();
-			sjme_atomic_barrier();
+			/* Let other threads run, every other cycle. */
+			if ((++cycle) > SJME_THREAD_YIELD_LIMIT && lockStep)
+				sjme_thread_yield();
 			
 			/* Try again... */
 			continue;
@@ -79,7 +91,9 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockGrabRead(
 	}
 		
 	/* Do this just for good measure for the wierd CPUs. */
-	sjme_atomic_barrier();
+	sjme_atomic_heavy();
+	
+	/* LCOV_EXCL_END */
 	
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -91,6 +105,8 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockGrabWrite(
 	sjme_errorCode error;
 	sjme_thread_spinLock* readLock;
 	sjme_jint writeCount;
+	
+	/* LCOV_EXCL_START */
 	
 	if (inLock == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
@@ -117,7 +133,9 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockGrabWrite(
 	}
 		
 	/* Do this just for good measure for the wierd CPUs. */
-	sjme_atomic_barrier();
+	sjme_atomic_heavy();
+	
+	/* LCOV_EXCL_END */
 	
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -130,6 +148,8 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockReleaseRead(
 	sjme_errorCode error;
 	sjme_thread_spinLock* readLock;
 	
+	/* LCOV_EXCL_START */
+	
 	if (inLock == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
 	
@@ -139,7 +159,9 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockReleaseRead(
 		return SJME_ERROR_ILLEGAL_STATE;
 		
 	/* Do this just for good measure for the wierd CPUs. */
-	sjme_atomic_barrier();
+	sjme_atomic_heavy();
+	
+	/* LCOV_EXCL_END */
 	
 	/* This is a no-op because we only access the read lock by locking and */
 	/* checking the write lock. */
@@ -158,6 +180,8 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockReleaseWrite(
 	
 	if (inLock == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
+	
+	/* LCOV_EXCL_START */
 	
 	/* The read lock is required. */
 	readLock = inLock->read;
@@ -181,7 +205,9 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_rwLockReleaseWrite(
 			return sjme_error_default(error);
 		
 	/* Do this just for good measure for the wierd CPUs. */
-	sjme_atomic_barrier();
+	sjme_atomic_heavy();
+	
+	/* LCOV_EXCL_END */
 	
 	/* Success! */
 	if (outCount != NULL)
@@ -195,6 +221,10 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_spinLockGrab(
 	sjme_errorCode error;
 	sjme_thread current;
 	sjme_jboolean keepSpinning;
+	sjme_jboolean lockStep;
+	sjme_jint cycle;
+	
+	/* LCOV_EXCL_START */
 	
 	if (inLock == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
@@ -206,19 +236,21 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_spinLockGrab(
 		return sjme_error_defaultOr(error,
 			SJME_ERROR_INVALID_THREAD_STATE);
 	
-	/* Do this just for good measure for the wierd CPUs. */
-	sjme_atomic_barrier();
+	/* Light lock before entering the spin loop. */
+	sjme_atomic_light();
 	
 	/* This is done in a loop until we own the lock. */
-	for (keepSpinning = SJME_JNI_TRUE; keepSpinning;)
+	cycle = 0;
+	for (keepSpinning = SJME_JNI_TRUE, lockStep = SJME_JNI_FALSE;
+		keepSpinning; lockStep = !lockStep)
 	{
 		/* Grab the peek lock. */
 		while (SJME_JNI_FALSE == sjme_atomic_cs(sjme_thread, 
 			&inLock->poke, SJME_THREAD_NULL, current))
 		{
-			sjme_atomic_barrier();
-			sjme_thread_yield();
-			sjme_atomic_barrier();
+			/* Every other time, let other threads run. */
+			if ((++cycle) > SJME_THREAD_YIELD_LIMIT && lockStep)
+				sjme_thread_yield();
 		}
 		
 		/* We own the lock already, or we just owned it, so count up. */
@@ -238,7 +270,9 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_spinLockGrab(
 	}
 		
 	/* Do this just for good measure for the wierd CPUs. */
-	sjme_atomic_barrier();
+	sjme_atomic_heavy();
+	
+	/* LCOV_EXCL_END */
 	
 	/* Success! */
 	return SJME_ERROR_NONE;
@@ -250,8 +284,10 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_spinLockRelease(
 {
 	sjme_errorCode error;
 	sjme_thread current;
-	sjme_jboolean owned;
-	sjme_jint count;
+	sjme_jboolean owned, lockStep;
+	sjme_jint count, cycle;
+	
+	/* LCOV_EXCL_START */
 	
 	if (inLock == NULL)
 		return SJME_ERROR_NULL_ARGUMENTS;
@@ -264,15 +300,20 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_spinLockRelease(
 			SJME_ERROR_INVALID_THREAD_STATE);
 		
 	/* Do this just for good measure for the wierd CPUs. */
-	sjme_atomic_barrier();
+	sjme_atomic_light();
 	
 	/* Grab the peek lock. */
+	cycle = 0;
+	lockStep = SJME_JNI_FALSE;
 	while (SJME_JNI_FALSE == sjme_atomic_cs(sjme_thread, 
 		&inLock->poke, SJME_THREAD_NULL, current))
 	{
-		sjme_atomic_barrier();
-		sjme_thread_yield();
-		sjme_atomic_barrier();
+		/* Let other threads run every other step. */
+		if ((++cycle) > SJME_THREAD_YIELD_LIMIT && lockStep)
+			sjme_thread_yield();
+		
+		/* Flip lock step. */
+		lockStep = !lockStep;
 	}
 	
 	/* We own the lock hopefully, so count down. */
@@ -296,7 +337,7 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_spinLockRelease(
 		current, SJME_THREAD_NULL);
 		
 	/* Do this just for good measure for the wierd CPUs. */
-	sjme_atomic_barrier();
+	sjme_atomic_heavy();
 
 #if defined(SJME_CONFIG_DEBUG)
 	/* Do we not own the lock? */
@@ -314,19 +355,27 @@ sjme_errorCode sjme_noOptimize sjme_keepOrder sjme_thread_spinLockRelease(
 			*outCount = 0;
 	}
 	
+	/* LCOV_EXCL_END */
+	
 	return SJME_ERROR_NONE;
 }
 
 void sjme_thread_sleep(sjme_attrInPositive sjme_jint millis,
 	sjme_attrInPositive sjme_jint nanos)
 {
+	/* LCOV_EXCL_START */
+	
 	/* Fallback to NAL handler, if available. */
 	if (sjme_nal_default.threadSleep != NULL)
 		sjme_nal_default.threadSleep(millis, nanos);
+	
+	/* LCOV_EXCL_END */
 }
 
 void sjme_thread_yield(void)
 {
+	/* LCOV_EXCL_START */
+	
 #if defined(SJME_CONFIG_HAS_THREADS_LIBRARY_YIELD)
 	/* Has library based yield? */
 	sjme_thread_yieldImpl();
@@ -335,4 +384,6 @@ void sjme_thread_yield(void)
 	if (sjme_nal_default.threadYield != NULL)
 		sjme_nal_default.threadYield();
 #endif
+	
+	/* LCOV_EXCL_END */
 }

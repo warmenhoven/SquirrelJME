@@ -52,8 +52,10 @@ sjme_errorCode sjme_nvm_loop_main(
  * @param maxTics The number of ticks to execute before returning,
  * a tick value of @c -1 means to tick forever. If the state has a tic limit
  * set then this will be capped to that limit, otherwise it will be infinite.
+ * If this value is @c INT32_MIN then this will use the default tic rate.
  * @param ticRemainder The output number of ticks remaining, this is optional.
  * @param isTerminated Optional output to check if the VM terminated.
+ * @param doYield Should this thread perform yielding?
  * @return Any resultant error, if any.
  * @since 2025/01/05
  */
@@ -61,7 +63,8 @@ sjme_errorCode sjme_nvm_loop_tick(
 	sjme_attrInNotNull sjme_nvm inState,
 	sjme_attrInValue sjme_attrInNegativeOnePositive sjme_jint maxTics,
 	sjme_attrOutNullable sjme_jint* ticRemainder,
-	sjme_attrOutNullable sjme_jboolean* isTerminated);
+	sjme_attrOutNullable sjme_jboolean* isTerminated,
+	sjme_attrInValue sjme_jboolean doYield);
 
 /**
  * Explicitely ticks a thread depending on the threading logic of the
@@ -93,7 +96,8 @@ sjme_errorCode sjme_nvm_loop_tickExplicit(
  * a tick value of @c -1 means to tick forever.
  * @param minFrameLevel The minimum frame level to run, this will execute all
  * frames that are at least this level or higher, @c -1 means that all frames
- * run regardless of level.
+ * run regardless of level. If this is @c INT32_MIN then this will use the
+ * configured tic limit.
  * @param ticRemainder The output number of ticks remaining, this is optional.
  * @param isTerminated Optional output to check if the VM terminated.
  * @return Any resultant error, if any. If the thread has fallen below the

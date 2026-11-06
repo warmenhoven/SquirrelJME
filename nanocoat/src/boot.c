@@ -17,8 +17,15 @@
 #include "sjme/path.h"
 #include "sjme/joptarg.h"
 #include "sjme/externalWeak.h"
+#include "sjme/fixed.h"
 #include "sjme/nvm/romMeepSwm.h"
 #include "sjme/nvm/jdwp.h"
+
+/** The slice in nanoseconds. */
+#define SJME_SLICE_NS INT64_C(100000000)
+
+/** The slice in milliseconds. */
+#define SJME_SLICE_MS 100
 
 #if defined(SJME_PATH_SHORT)
 	/** The name of the SquirrelJME Jar. */
@@ -36,6 +43,8 @@
 
 static const sjme_joptarg_helpParam sjme_joptarg_helpParams[] =
 {
+	{"-Xclock:(infinite|0|1-2147483647)",
+		"The number of instruction cycles to run per tic."},
 	{"-Xclutter:<release|debug>",
 		"If available, selects the given clutter level."},
 	{"-Xdebug", 
@@ -48,10 +57,12 @@ static const sjme_joptarg_helpParam sjme_joptarg_helpParams[] =
 		"Force pure interpreter, do not perform optimizations (slow)."},
 	{"-Xjdwp:[hostname]:port",
 		"Listens or connects to a JDWP debugger."},
-	{"-Xrom:<path>",
-		"The ROM to use."},
 	{"-Xlibraries:<class:path:...>",
 		"Libraries to include in the library path, not the classpath."},
+	{"-Xlp",
+		"Low power mode, sleep instead of yield."},
+	{"-Xrom:<path>",
+		"The ROM to use."},
 	{"-Xscritchui:<ui>",
 		"Default interface to choose for ScritchUI."},
 	{"-Xsnapshot:<path-to-nps>",
@@ -388,6 +399,89 @@ fail_open:
 #undef BUF_SIZE
 }
 
+static sjme_errorCode sjme_nvm_scheduleTimer(
+	sjme_attrInNotNull sjme_alloc_pool allocPool,
+	sjme_attrInNotNull sjme_nvm inState,
+	sjme_attrInOutNotNull sjme_nvm_threadSchedule* schedule)
+{
+	sjme_errorCode error;
+	sjme_jlong yieldIn, yieldOut;
+	sjme_jlong lightIn, lightOut;
+	sjme_jint yieldCount, yieldOrig;
+	sjme_jint lightCount, lightOrig;
+	
+	if (allocPool == NULL || inState == NULL || schedule == NULL)
+		return SJME_ERROR_NULL_ARGUMENTS;
+	
+	if (inState->nal == NULL || inState->nal->nanoTime == NULL)
+		return SJME_ERROR_ILLEGAL_STATE;
+	
+	/* Determine the number of light barriers that occur. */
+	memset(&lightIn, 0, sizeof(lightIn));
+	memset(&lightOut, 0, sizeof(lightOut));
+	inState->nal->nanoTime(&lightIn);
+	for (lightCount = 0; lightCount >= 0; lightCount++)
+	{
+		/* Read barrier. */
+		sjme_atomic_light();
+		
+		/* How much time has passed? */
+		inState->nal->nanoTime(&lightOut);
+		if ((lightOut.full - lightIn.full) >= SJME_SLICE_NS)
+			break;
+	}
+	
+	/* Determine the number of yields that occur for a very small slice */
+	/* of time. */
+	memset(&yieldIn, 0, sizeof(yieldIn));
+	memset(&yieldOut, 0, sizeof(yieldOut));
+	inState->nal->nanoTime(&yieldIn);
+	for (yieldCount = 0; yieldCount >= 0; yieldCount++)
+	{
+		/* Yield. */
+		sjme_thread_yield();
+		
+		/* How much time has passed? */
+		inState->nal->nanoTime(&yieldOut);
+		if ((yieldOut.full - yieldIn.full) >= SJME_SLICE_NS)
+			break;
+	}
+	
+	/* Because of flux with system scheduling, we should instead */
+	/* normalize the max value here so that it is more aligned between */
+	/* different VM runs. */
+	yieldOrig = yieldCount;
+	yieldCount = (sjme_util_intOneBitHighestU(yieldCount) +
+		sjme_util_intOneBitHighestU(yieldCount << 1)) >> 1;
+	if (yieldCount <= 1)
+		yieldCount = 1;
+	
+	/* Normalize read barrier time as well. */
+	lightOrig = lightCount;
+	lightCount = (sjme_util_intOneBitHighestU(lightCount) +
+		sjme_util_intOneBitHighestU(lightCount << 1)) >> 1;
+	if (lightCount <= 1)
+		lightCount = 1;
+	
+	/* We want to light read up to this point. */
+	inState->schedule->lightTimer = 0;
+	inState->schedule->lightMax = lightCount;
+	
+	/* We want to yield up to this point. */
+	inState->schedule->yieldTimer = 0;
+	inState->schedule->yieldMax = yieldCount;
+	
+	/* Then transition to actual sleeps. */
+	/* Since the clocked time was 100ms, the sleep rate needs to be */
+	/* adjusted from the actual yield rate. */
+	inState->schedule->nothingMillis =
+		(SJME_SLICE_MS * yieldCount) / yieldOrig;
+	inState->schedule->nothingNanos = 0;
+	
+	/* Success! */
+	return SJME_ERROR_NONE;
+}
+
 sjme_errorCode sjme_nvm_boot(
 	sjme_attrInNotNull sjme_alloc_pool allocPool,
 	sjme_attrInNotNull const sjme_nvm_bootParam* param,
@@ -403,7 +497,6 @@ sjme_errorCode sjme_nvm_boot(
 	sjme_nvm_bootParam* bootParamCopy;
 	sjme_nvm_task initTask;
 	sjme_list(sjme_nvm_rom_library)* classPath;
-	sjme_jlong yieldIn, yieldOut;
 	sjme_nvm_rom_suite jarSuite;
 	sjme_nvm_rom_library jarLibrary;
 	sjme_path runJarPath;
@@ -455,6 +548,12 @@ sjme_errorCode sjme_nvm_boot(
 	result->hookData = param->hookData;
 	result->globals.instanceId =
 		sjme_nvm_instance_calcIdentityHash(NULL, result);
+	
+	/* Determine the default tic rate. */
+	if (param->ticLimit <= 0)
+		result->globals.ticLimit = 0;
+	else
+		result->globals.ticLimit = param->ticLimit;
 
 	/* TODO FIXME: vvvvvv HANDLE MERGE IN ANOTHER FUNCTION. */
 	
@@ -682,29 +781,10 @@ sjme_errorCode sjme_nvm_boot(
 			result->schedule == NULL)
 			goto fail_allocSchedule;
 		
-		/* Determine the number of yields that occur for a very small slice */
-		/* of time. */
-		memset(&yieldIn, 0, sizeof(yieldIn));
-		memset(&yieldOut, 0, sizeof(yieldOut));
-		result->nal->nanoTime(&yieldIn);
-		for (i = 0; i >= 0; i++)
-		{
-			/* Yield. */
-			sjme_thread_yield();
-			
-			/* How much time has passed? */
-			result->nal->nanoTime(&yieldOut);
-			if ((yieldOut.full - yieldIn.full) >= INT64_C(100000000))
-				break;
-		}
-		
-		/* We want to yield up to this point. */
-		result->schedule->yieldTimer = 0;
-		result->schedule->yieldMax = i;
-		
-		/* Then transition to actual sleeps. */
-		result->schedule->nothingMillis = 100;
-		result->schedule->nothingNanos = 0;
+		/* Setup timer. */
+		if (sjme_error_is(error = sjme_nvm_scheduleTimer(
+			allocPool, result, result->schedule)))
+			goto fail_calcTimers;
 	}
 
 	/* TODO FIXME: vvvvvv SPLIT OFF INITIAL TASK SETUP. */
@@ -821,6 +901,7 @@ sjme_errorCode sjme_nvm_boot(
 fail_initTask:
 fail_scritchUiDeInit:
 fail_scritchUiInit:
+fail_calcTimers:
 fail_allocSchedule:
 fail_badClassPath:
 fail_defaultLaunch:
@@ -1072,6 +1153,27 @@ sjme_errorCode sjme_nvm_parseCommandLine(
 				"--help"))
 		{
 			helpOpt = argv[argAt];
+		}
+		
+		/* -Xlp */
+		else if (sjme_charSeq_equalsUtfR(&argSeq,
+			"-Xlp"))
+		{
+			outParam->lowPower = SJME_JNI_TRUE;
+		}
+		
+		/* -Xclock:(infinite|0|1-2147483647) */
+		else if (sjme_charSeq_startsWithUtfR(&argSeq,
+			"-Xclock:"))
+		{
+			/* Simpler to use as UTF. */
+			tempUtf = sjme_charSeq_tempUtf(&argSeq);
+			
+			/* Parse value. */
+			outParam->ticLimit = (sjme_jint)sjme_lpcstoimax(
+					&tempUtf[strlen("-Xclock:")], NULL, 10);
+			if (outParam->ticLimit < 0)
+				outParam->ticLimit = 0;
 		}
 		
 		/* -Xclutter:(release|debug) */
