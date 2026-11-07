@@ -30,18 +30,29 @@ static sjme_inline void sjme_nvm_loopYield(
 static sjme_inline void sjme_nvm_loopTryYield(
 	sjme_attrInNotNull sjme_nvm inState)
 {
+	sjme_jint busyTime, yieldTime;
+	sjme_nvm_threadSchedule* schedule;
+	
 	if (inState == NULL || inState->schedule == NULL)
 		return;
 	
+	/* Having the schedule is nice. */
+	schedule = inState->schedule;
+
+	/* Busy loop? Just return and re-run? */
+	busyTime = ++schedule->busyTimer;
+	if (busyTime < schedule->busyMax)
+		return;
+	
 	/* Yield instead of a longer sleep delay? */
-	if (++inState->schedule->yieldTimer < 
-		inState->schedule->yieldMax)
+	yieldTime = ++schedule->yieldTimer; 
+	if (yieldTime < schedule->yieldMax)
 		sjme_nvm_loopYield(inState);
 
 	/* Sleep instead of yield. */
 	else
-		sjme_thread_sleep(inState->schedule->nothingMillis,
-			inState->schedule->nothingNanos);
+		sjme_thread_sleep(schedule->nothingMillis,
+			schedule->nothingNanos);
 }
 
 static sjme_thread_result sjme_attrThreadCall sjme_nvm_loop_tickCrash(
@@ -53,9 +64,16 @@ static sjme_thread_result sjme_attrThreadCall sjme_nvm_loop_tickCrash(
 	inThread = SJME_THREAD_PARAM_POINTER(rawThread);
 	if (inThread == NULL)
 		return SJME_THREAD_RESULT(SJME_ERROR_NONE);
+	
+	/* Crash occurred! */
+	sjme_emitB("**********************************************************");
+	sjme_emitB("SquirrelJME VM Crash: %p", rawThread);
 
 	/* Print stack trace. */
 	sjme_nvm_task_stackTraceThread(inThread);
+	
+	/* Trailer. */
+	sjme_emitB("**********************************************************");
 	
 	/* No error generally. */
 	return SJME_THREAD_RESULT(SJME_ERROR_NONE);
@@ -132,47 +150,46 @@ sjme_errorCode sjme_nvm_loop_tickExplicit(
 	/* that have additional threads that are outside the VM thread logic. */
 	if ((inThread->flags & SJME_NVM_THREAD_IS_EXPLICIT) == 0)
 	{
-		/* The current thread model is cooperate or pre-emptive. */
-		if (inState->threadModel == SJME_NVM_MLE_THREAD_SINGLE_COOP ||
-			inState->threadModel == SJME_NVM_MLE_THREAD_SINGLE_PREEMPT)
-		{
-			/* If this is not the current thread, then we are in some other */
-			/* thread... only bad stuff will happen here. */
-			if (!sjme_thread_equal(sjme_thread_currentR(),
-				sjme_atomic_g(sjme_thread, &inThread->nativeThread)))
-				return SJME_ERROR_INVALID_EXPLICIT_NEST;
-
-			/* We cannot just keep running forever, otherwise this will just */
-			/* never exit until some unspecified condition just happens. */
-			/* Thus, there needs to be a tic limit. */
-			/* If the configured tic limit is too low, clamp it to a minimum */
-			/* as callback threads will heavily stall the virtual machine. */
-			if (inState->globals.ticLimit > 0)
-				ticLimit = sjme_max(SJME_CONFIG_NESTED_THREAD_TIC_LIMIT,
-					inState->globals.ticLimit);
-			else
-				ticLimit = SJME_CONFIG_NESTED_THREAD_TIC_LIMIT_HIGH;
-
-			/* We just keep running every thread and scheduling until the */
-			/* thread we actually care about falls below the frame level. */
-			vmDead = SJME_JNI_FALSE;
-			while (inThread->numFrames >= minFrameLevel && !vmDead)
-			{
-				if (sjme_error_is(error = sjme_nvm_loop_tick(inState,
-						ticLimit, NULL, &vmDead, SJME_JNI_FALSE)))
-					return sjme_error_default(error);
-
-				/* Yield to let other threads run. */
-				sjme_nvm_loopYield(inState);
-			}
-
-			/* Always capture the return value at the end, if desired. */
-			goto skip_captureReturn;
-		}
-		
-		/* This cannot be done for this thread. */
-		else
+		/* The current thread model must be cooperative or pre-emptive. */
+		/* Otherwise, this cannot be done for this thread. */
+		if (inState->threadModel != SJME_NVM_MLE_THREAD_SINGLE_COOP &&
+			inState->threadModel != SJME_NVM_MLE_THREAD_SINGLE_PREEMPT)
 			return SJME_ERROR_INVALID_ARGUMENT;
+
+		/* If this is not the current thread, then we are in some other */
+		/* thread... only bad stuff will happen here. */
+		if (!sjme_thread_equal(sjme_thread_currentR(),
+			sjme_atomic_g(sjme_thread, &inThread->nativeThread)))
+			return SJME_ERROR_INVALID_EXPLICIT_NEST;
+
+		/* We cannot just keep running forever, otherwise this will just */
+		/* never exit until some unspecified condition just happens. */
+		/* Thus, there needs to be a tic limit. */
+		/* If the configured tic limit is too low, clamp it to a minimum */
+		/* as callback threads will heavily stall the virtual machine. */
+		if (inState->globals.ticLimit > 0)
+			ticLimit = sjme_max(SJME_CONFIG_NESTED_THREAD_TIC_LIMIT,
+				inState->globals.ticLimit);
+		else
+			ticLimit = SJME_CONFIG_NESTED_THREAD_TIC_LIMIT_HIGH;
+
+		/* We just keep running every thread and scheduling until the */
+		/* thread we actually care about falls below the frame level. */
+		vmDead = SJME_JNI_FALSE;
+		while (inThread->numFrames >= minFrameLevel && !vmDead)
+		{
+			/* Run tics. */
+			if (sjme_error_is(error = sjme_nvm_loop_tick(inState,
+				ticLimit, NULL, &vmDead, 
+				SJME_JNI_FALSE)))
+				return sjme_error_default(error);
+
+			/* Yield to let other threads run. */
+			sjme_nvm_loopYield(inState);
+		}
+
+		/* Always capture the return value at the end, if desired. */
+		goto skip_captureReturn;
 	}
 
 	/* Run the thread explicitly. */
@@ -186,7 +203,7 @@ sjme_errorCode sjme_nvm_loop_tickExplicit(
 			/* Any other error. */
 			if (error != SJME_ERROR_MINIMUM_FRAME_LEVEL)
 				return sjme_error_default(error);
-
+			
 			/* Minimum frame level means we must stop, as this could */
 			/* actually be a nested loop execution, in which case things */
 			/* will go very wrong if we start executing a higher level. */
@@ -198,6 +215,11 @@ sjme_errorCode sjme_nvm_loop_tickExplicit(
 	}
 
 skip_captureReturn:
+	/* Force thread to be in the sleeping state. */
+	sjme_atomic_cs(sjme_nvm_thread_statusType, &inThread->status,
+		SJME_NVM_THREAD_STATUS_RUNNING,
+		SJME_NVM_THREAD_STATUS_SLEEPING);
+	
 	/* Capture the return value? */
 	if (argRCopy != NULL)
 	{
@@ -260,7 +282,8 @@ sjme_errorCode sjme_nvm_loop_tick(
 			continue;
 		}
 		
-		/* Reset the yield timer, since we did run something. */
+		/* Reset the timers, since we did run something. */
+		inState->schedule->busyTimer = 0;
 		inState->schedule->yieldTimer = 0;
 
 		/* Otherwise execute the single thread. */
@@ -310,7 +333,7 @@ sjme_errorCode sjme_nvm_loop_tickThread(
 	sjme_debug_crashContext(sjme_nvm_loop_tickCrash, inThread);
 
 	/* The remaining execution count is always at the max tic count. */
-	remaining = maxTics;
+	remaining = (maxTics == INT32_MIN ? -1 : maxTics);
 
 	/* The error to emit on success, in the event there is another condition */
 	/* such as the frame level being hit. */
@@ -333,7 +356,7 @@ sjme_errorCode sjme_nvm_loop_tickThread(
 	frameIndex = -2;
 	jdwp = inState->jdwp;
 	memset(&pcNew, 0, sizeof(pcNew));
-	while sjme_noLint(remaining == -1 || remaining > 0)
+	while (remaining == -1 || remaining > 0)
 	{
 		/* Is there a debugger attached? If so we should poll it. */
 		/* Never for callback threads because those will just deadlock. */
@@ -379,14 +402,21 @@ sjme_errorCode sjme_nvm_loop_tickThread(
 		}
 		
 		/* Thread has entered a sleeping state? */
-		/* This is ignored for callback threads unless they are waiting on */
-		/* a monitor, which would break if it is allowed to run. */
-		/* Explicitly run threads in this case are never truly sleeping. */
 		status = sjme_atomic_g(sjme_nvm_thread_statusType,
 			&inThread->status);
 		if (status != SJME_NVM_THREAD_STATUS_RUNNING)
+		{
+			/* This is ignored for callback threads unless they are waiting */
+			/* on a monitor, which would break if it is allowed to run. */
+			/* Explicitly run threads in this case are never truly sleeping. */
 			if (!isCallback || status == SJME_NVM_THREAD_STATUS_MONITOR_WAIT)
 				break;
+			
+			/* Force to be in the running state. */
+			sjme_atomic_cs(sjme_nvm_thread_statusType, &inThread->status,
+				SJME_NVM_THREAD_STATUS_SLEEPING,
+				SJME_NVM_THREAD_STATUS_RUNNING);
+		}
 		
 		/* Tick down. */
 		if (remaining > 0)
@@ -397,7 +427,7 @@ sjme_errorCode sjme_nvm_loop_tickThread(
 		{
 			/* Are there any actual frames left? */
 			frameIndex = (inThread->numFrames - 1);
-			if (frameIndex < 0)
+			if (frameIndex < 0 && minFrameLevel >= 0)
 			{
 				/* If we are expecting a minimum frame, once all the frames */
 				/* are gone then the frame level is gone. */
