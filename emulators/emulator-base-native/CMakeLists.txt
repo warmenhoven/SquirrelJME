@@ -22,6 +22,10 @@ set(SQUIRRELJME_NANOCOAT_BINARY_DIR "${CMAKE_BINARY_DIR}/nanocoat")
 include("${SQUIRRELJME_NANOCOAT_SOURCE_DIR}/cmake/easier-includes.cmake"
 	NO_POLICY_SCOPE)
 
+# Output binaries here
+set(SQUIRRELJME_DYLIB_OUTPUT_DIR "${SQUIRRELJME_NANOCOAT_BINARY_DIR}/bin")
+set(SQUIRRELJME_BINARY_OUTPUT_DIR "${SQUIRRELJME_NANOCOAT_BINARY_DIR}/bin")
+
 # Include backports
 squirreljme_include_nanocoat("cmake-bp.cmake")
 
@@ -58,6 +62,17 @@ squirreljme_include_nanocoat("environment-options.cmake")
 squirreljme_include_nanocoat("utils.cmake")
 squirreljme_include_nanocoat("fixes.cmake")
 squirreljme_include_nanocoat("find.cmake")
+
+# Support bases
+squirreljme_include_nanocoat("cmake-patch.cmake")
+squirreljme_include_nanocoat("pre-fixes.cmake")
+squirreljme_include_nanocoat("system-map.cmake")
+squirreljme_include_nanocoat("fixes.cmake")
+squirreljme_include_nanocoat("multilib.cmake")
+squirreljme_include_nanocoat("find-jni.cmake")
+
+# Where is the JVM library?
+message(STATUS "Java JVM Library: ${JAVA_JVM_LIBRARY}")
 
 # We want to forward as many CMAKE_ commands to the target NanoCoat as
 # possible
@@ -142,8 +157,13 @@ foreach(var IN LISTS allVariables)
 		"${var}" STREQUAL "SQUIRRELJME_JAVA_JNI_INCLUDE" OR
 		"${var}" STREQUAL "SQUIRRELJME_HAS_JAVA_JVM" OR
 		"${var}" STREQUAL "SQUIRRELJME_JAVA_JVM_INCLUDE" OR
+		"${var}" STREQUAL "SQUIRRELJME_JVM_LIBRARY" OR
+		"${var}" STREQUAL "SQUIRRELJME_JVM_LIBRARY_DIR" OR
+		"${var}" STREQUAL "SQUIRRELJME_JVM_LIBRARY_NAME" OR
 		"${var}" STREQUAL "SQUIRRELJME_EXPORT_OWN_JNI_JVM" OR
 		"${var}" STREQUAL "SQUIRRELJME_SELF_HOSTED_LIBJVM" OR
+		"${var}" STREQUAL "SQUIRRELJME_DYLIB_OUTPUT_DIR" OR
+		"${var}" STREQUAL "SQUIRRELJME_BINARY_OUTPUT_DIR" OR
 		"${var}" STREQUAL "__END_OF_EVERYTHING__")
 		continue()
 	endif()
@@ -264,6 +284,8 @@ if(squirreljme_bp_version_3_13)
 			"-A" "${CMAKE_GENERATOR_PLATFORM}"
 			"-S" "${SQUIRRELJME_NANOCOAT_SOURCE_DIR}"
 			"-B" "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
+		"-DSQUIRRELJME_DYLIB_OUTPUT_DIR=${SQUIRRELJME_DYLIB_OUTPUT_DIR}"
+		"-DSQUIRRELJME_BINARY_OUTPUT_DIR=${SQUIRRELJME_BINARY_OUTPUT_DIR}"
 		WORKING_DIRECTORY "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
 		DEPENDS "${nanoCoatGlobCMake}")
 else()
@@ -274,6 +296,8 @@ else()
 				COMMAND "${CMAKE_COMMAND}"
 					"-C" "${cacheFile}"
 					"-G" "${CMAKE_GENERATOR}"
+		"-DSQUIRRELJME_DYLIB_OUTPUT_DIR=${SQUIRRELJME_DYLIB_OUTPUT_DIR}"
+		"-DSQUIRRELJME_BINARY_OUTPUT_DIR=${SQUIRRELJME_BINARY_OUTPUT_DIR}"
 					"${SQUIRRELJME_NANOCOAT_SOURCE_DIR}"
 				WORKING_DIRECTORY "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
 				DEPENDS "${nanoCoatGlobCMake}")
@@ -284,6 +308,8 @@ else()
 					"-C" "${cacheFile}"
 					"-G" "${CMAKE_GENERATOR}"
 					"-A" "${CMAKE_GENERATOR_PLATFORM}"
+		"-DSQUIRRELJME_DYLIB_OUTPUT_DIR=${SQUIRRELJME_DYLIB_OUTPUT_DIR}"
+		"-DSQUIRRELJME_BINARY_OUTPUT_DIR=${SQUIRRELJME_BINARY_OUTPUT_DIR}"
 					"${SQUIRRELJME_NANOCOAT_SOURCE_DIR}"
 				WORKING_DIRECTORY "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
 				DEPENDS "${nanoCoatGlobCMake}")
@@ -296,6 +322,8 @@ else()
 					"-C" "${cacheFile}"
 					"-G" "${CMAKE_GENERATOR}"
 					"-T" "${CMAKE_GENERATOR_TOOLSET}"
+		"-DSQUIRRELJME_DYLIB_OUTPUT_DIR=${SQUIRRELJME_DYLIB_OUTPUT_DIR}"
+		"-DSQUIRRELJME_BINARY_OUTPUT_DIR=${SQUIRRELJME_BINARY_OUTPUT_DIR}"
 					"${SQUIRRELJME_NANOCOAT_SOURCE_DIR}"
 				WORKING_DIRECTORY "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
 				DEPENDS "${nanoCoatGlobCMake}")
@@ -307,6 +335,8 @@ else()
 					"-G" "${CMAKE_GENERATOR}"
 					"-T" "${CMAKE_GENERATOR_TOOLSET}"
 					"-A" "${CMAKE_GENERATOR_PLATFORM}"
+		"-DSQUIRRELJME_DYLIB_OUTPUT_DIR=${SQUIRRELJME_DYLIB_OUTPUT_DIR}"
+		"-DSQUIRRELJME_BINARY_OUTPUT_DIR=${SQUIRRELJME_BINARY_OUTPUT_DIR}"
 					"${SQUIRRELJME_NANOCOAT_SOURCE_DIR}"
 				WORKING_DIRECTORY "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
 				DEPENDS "${nanoCoatGlobCMake}")
@@ -329,7 +359,7 @@ if(TARGET SquirrelJME-RunConfigureStep)
 endif()
 
 # Add macro since these are all the same
-macro(squirreljme_external_step target)
+macro(squirreljme_external_step target byProducts)
 	# Make sure the directory exists
 	file(MAKE_DIRECTORY "${SQUIRRELJME_NANOCOAT_BINARY_DIR}")
 
@@ -340,7 +370,8 @@ macro(squirreljme_external_step target)
 			"--build" "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
 			"--target" ${target}
 		WORKING_DIRECTORY "${SQUIRRELJME_NANOCOAT_BINARY_DIR}"
-		DEPENDS "${nanoCoatGlobSrc}")
+		DEPENDS "${nanoCoatGlobSrc}"
+		BYPRODUCTS "${byProducts}")
 
 	# Add targets to build it
 	ExternalProject_Add_StepTargets(SquirrelJME ${target}
@@ -352,11 +383,16 @@ macro(squirreljme_external_step target)
 endmacro()
 
 # Add steps
-squirreljme_external_step(BaseStatic)
-squirreljme_external_step(ScritchAudio)
-squirreljme_external_step(ScritchUi)
-squirreljme_external_step(libJvmDyLib)
-squirreljme_external_step(SquirrelJME)
+squirreljme_external_step(BaseStatic
+	"")
+squirreljme_external_step(ScritchAudio
+	"${SQUIRRELJME_NANOCOAT_BINARY_DIR}/bin/ScritchAudio.paths")
+squirreljme_external_step(ScritchUi
+	"${SQUIRRELJME_NANOCOAT_BINARY_DIR}/bin/ScritchUi.paths")
+squirreljme_external_step(libJvmDyLib
+	"${SQUIRRELJME_JVM_LIBRARY_LINK}")
+squirreljme_external_step(SquirrelJME
+	"")
 
 # Correct dependencies
 ExternalProject_Add_StepDependencies(SquirrelJME BaseStatic
@@ -375,14 +411,6 @@ ExternalProject_Add_StepDependencies(SquirrelJME libJvmDyLib
 ExternalProject_Add_StepDependencies(SquirrelJME SquirrelJME
 	SquirrelJME-libJvmDyLib
 	SquirrelJME-RunConfigureStep)
-
-# Support bases
-squirreljme_include_nanocoat("cmake-patch.cmake")
-squirreljme_include_nanocoat("pre-fixes.cmake")
-squirreljme_include_nanocoat("system-map.cmake")
-squirreljme_include_nanocoat("fixes.cmake")
-squirreljme_include_nanocoat("multilib.cmake")
-squirreljme_include_nanocoat("find-jni.cmake")
 
 # Declare library
 add_library(libEmulatorBase SHARED
@@ -430,11 +458,13 @@ target_include_directories(libEmulatorBase PRIVATE
 
 # Libraries for the build
 squirreljme_target_link_directories(libEmulatorBase PRIVATE
-	"${SQUIRRELJME_NANOCOAT_BINARY_DIR}/bin")
+	"${SQUIRRELJME_NANOCOAT_BINARY_DIR}/bin"
+	"${CMAKE_BINARY_DIR}"
+	"${CMAKE_CURRENT_BINARY_DIR}")
 squirreljme_link_libraries_required(libEmulatorBase PUBLIC
-	"${SQUIRRELJME_REQUIRED_LIBS}"
+	BaseStatic
 	"${JAVA_JVM_LIBRARY}"
-	BaseStatic)
+	"${SQUIRRELJME_REQUIRED_LIBS}")
 
 # It is easier to find this when it is in the build root
 squirreljme_target_binary_name(libEmulatorBase
@@ -449,11 +479,20 @@ squirreljme_shared_library_exports(libEmulatorBase)
 squirreljme_library_dir(emulatorBaseDir libEmulatorBase)
 squirreljme_library_path(emulatorBasePath libEmulatorBase)
 
+# Where do bundled ZIPs go?
+if(NOT DEFINED SQUIRRELJME_NATIVES_BUNDLE_DIR)
+	set(SQUIRRELJME_NATIVES_BUNDLE_DIR "${CMAKE_BINARY_DIR}/bin")
+endif()
+
+# Make sure the bundle output exists
+file(MAKE_DIRECTORY "${SQUIRRELJME_NATIVES_BUNDLE_DIR}")
+
 # The ZIP goes into the emulator base directory
+set(osArch "${SQUIRRELJME_SYSTEM}-${SQUIRRELJME_ARCH}")
 set(nativesZip
-	"${emulatorBaseDir}/natives-${SQUIRRELJME_SYSTEM}-${SQUIRRELJME_ARCH}.zip")
+	"${SQUIRRELJME_NATIVES_BUNDLE_DIR}/natives-${osArch}.zip")
 set(nativesZipSimple
-	"${emulatorBaseDir}/natives.zip")
+	"${SQUIRRELJME_NATIVES_BUNDLE_DIR}/natives.zip")
 
 # Determine target natives path and directories
 set(nativesDir "${CMAKE_BINARY_DIR}/bundle/")
@@ -486,7 +525,9 @@ add_custom_target(bundleNatives
 
 			# Copy files
 			"$<TARGET_FILE:libEmulatorBase>"
-			"${SQUIRRELJME_NANOCOAT_BINARY_DIR}/bin/${exeName}"
+			"${SQUIRRELJME_DYLIB_OUTPUT_DIR}/${exeName}"
+			"${SQUIRRELJME_JVM_LIBRARY}"
+			"${SQUIRRELJME_JVM_LIBRARY_IMP}"
 	WORKING_DIRECTORY "${nativesDir}"
 	BYPRODUCTS "${nativesZip}" "${nativesZipSimple}"
 	COMMENT "Bundling natives..."

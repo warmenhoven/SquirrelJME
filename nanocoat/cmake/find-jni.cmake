@@ -152,6 +152,59 @@ if(NOT SQUIRRELJME_SELF_HOSTED_LIBJVM)
 	endif()
 endif()
 
+# Which library is being chosen?
+set(impName "${CMAKE_IMPORT_LIBRARY_PREFIX}jvm")
+set(impName "${impName}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+set(soName "${CMAKE_SHARED_LIBRARY_PREFIX}jvm")
+set(soName "${soName}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+
+# Where is the library?
+if(NOT "${SQUIRRELJME_DYLIB_OUTPUT_DIR}" STREQUAL "")
+	set(soDir "${SQUIRRELJME_DYLIB_OUTPUT_DIR}")
+elseif(NOT "${SQUIRRELJME_BINARY_OUTPUT_DIR}" STREQUAL "")
+	set(soDir "${SQUIRRELJME_BINARY_OUTPUT_DIR}")
+elseif(NOT "${SQUIRRELJME_NANOCOAT_BINARY_DIR}" STREQUAL "")
+	set(soDir "${SQUIRRELJME_NANOCOAT_BINARY_DIR}")
+else()
+	set(soDir "${CMAKE_BINARY_DIR}/bin")
+endif()
+
+# Set library to use
+set(SQUIRRELJME_JVM_LIBRARY_DIR "${soDir}")
+set(SQUIRRELJME_JVM_LIBRARY_NAME "${soName}")
+set(SQUIRRELJME_JVM_LIBRARY "${soDir}/${soName}")
+
+# And the import library
+set(SQUIRRELJME_JVM_LIBRARY_IMP_NAME "${impName}")
+set(SQUIRRELJME_JVM_LIBRARY_IMP "${soDir}/${impName}")
+
+# Chosen link library to use
+if("${SQUIRRELJME_SYSTEM}" STREQUAL "windows")
+	set(SQUIRRELJME_JVM_LIBRARY_LINK_NAME
+		"${SQUIRRELJME_JVM_LIBRARY_IMP_NAME}")
+	set(SQUIRRELJME_JVM_LIBRARY_LINK
+		"${SQUIRRELJME_JVM_LIBRARY_IMP}")
+else()
+	set(SQUIRRELJME_JVM_LIBRARY_LINK_NAME
+		"${SQUIRRELJME_JVM_LIBRARY_NAME}")
+	set(SQUIRRELJME_JVM_LIBRARY_LINK
+		"${SQUIRRELJME_JVM_LIBRARY}")
+endif()
+
+# Use own library instead?
+if(SQUIRRELJME_EXPORT_OWN_JNI_JVM AND
+	"${JAVA_JVM_LIBRARY}" STREQUAL "" AND
+	NOT "${SQUIRRELJME_JVM_LIBRARY}" STREQUAL "")
+	# Always use the link library
+	set(JAVA_JVM_LIBRARY "${SQUIRRELJME_JVM_LIBRARY_LINK}")
+endif()
+
+# SquirrelJME names
+message(STATUS "JVM Link  : ${SQUIRRELJME_JVM_LIBRARY_LINK}")
+message(STATUS "JVM ImpLib: ${SQUIRRELJME_JVM_LIBRARY_IMP}")
+message(STATUS "JVM DyLib : ${SQUIRRELJME_JVM_LIBRARY}")
+
 # Emit whatever was found of this
 message(STATUS "Has JNI: ${SQUIRRELJME_HAS_JAVA_JNI}")
 message(STATUS "JNI Include: ${SQUIRRELJME_JAVA_JNI_INCLUDE}")
